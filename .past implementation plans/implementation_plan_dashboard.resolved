@@ -1,0 +1,189 @@
+# Dashboard Page — Implementation Plan
+
+## Goal
+
+Create the **Dashboard** page (`/dashboard`) — a high-level analytics overview with stat cards, charts, a flamegraph/heatmap, and quick-action shortcuts. Dark-themed, premium aesthetic inspired by the reference images below.
+
+## Reference Images
+
+````carousel
+![Layout inspiration — stat cards, welcome greeting, histogram, card lighting](C:\Users\Daniel Roldan CT\.gemini\antigravity\brain\3098684c-2a29-4ff2-9f09-9f23c6650f49\ref_dashboard_layout.jpg)
+<!-- slide -->
+![Chart/graph styles — area, bar, donut, line, ring charts on dark backgrounds](C:\Users\Daniel Roldan CT\.gemini\antigravity\brain\3098684c-2a29-4ff2-9f09-9f23c6650f49\ref_dashboard_graphs.jpg)
+````
+
+> [!IMPORTANT]
+> Colors from the reference images are **not** carried over. The app's own palette (`#55b7e0` primary, `#fab728` orange, slate tones) will be used instead.
+
+---
+
+## Pre-Flight Security Analysis
+
+### Install `recharts` charting library
+
+| Check | Assessment |
+|---|---|
+| **Impact Analysis** | **Local** — adds a package to `node_modules/`. No system-wide changes. |
+| **Security Threat Model** | Low risk. `recharts` is one of the most popular React charting libraries (23k+ GitHub stars, millions of weekly downloads). No known vulnerabilities. |
+| **Sanity Check** | Native SVG/Canvas charts would avoid a dependency but would take significantly more code. Recharts is the standard solution. |
+
+> **ACTION:** `npm install recharts`  
+> **RATIONALE:** Needed for line charts, bar charts, donut/pie charts, and area charts.  
+> **SECURITY RATING:** Low Risk  
+> **UNDO ACTION:** `npm uninstall recharts`
+
+---
+
+## Proposed Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Welcome, Alex 👋                                               │
+│  Here's what's happening across your AI team today.             │
+├─────────────┬─────────────┬─────────────┬───────────────────────┤
+│ Total       │ Active      │ Messages    │ Knowledge             │
+│ Agents      │ Conversa-   │ Sent Today  │ Sources               │
+│  12         │ tions  847  │   3,291     │   7                   │
+│ +2 this wk  │ +12.4%      │ +8.3%       │ 2.4 GB / 10 GB       │
+├─────────────┴──────────────────────────┬────────────────────────┤
+│  📈 Conversations Over Time (Line)    │ 🍩 Conversation Status │
+│  [7-day area/line chart]              │     (Donut chart)      │
+│                                       │  Resolved / Escalated  │
+│                                       │  / Ongoing             │
+├────────────────────────────────────────┼────────────────────────┤
+│  📊 Messages Sent vs Received (Bar)  │ 🔥 Agent Usage         │
+│  [Daily bar chart, grouped]           │    (Heatmap/Flamegraph)│
+│                                       │  Agent × Day matrix    │
+├────────────────────────────────────────┴────────────────────────┤
+│  ⚡ Quick Actions                                               │
+│  [ + Create New Agent ]  [ + Add Knowledge Source ]  [ View →] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Proposed Changes
+
+### New Dependency
+
+> `npm install recharts` — React charting library for SVG-based charts
+
+---
+
+### Dashboard Component
+
+#### [NEW] [Dashboard.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/Dashboard.tsx)
+
+A new page component containing all the sections below:
+
+**1. Welcome Header**
+- "Welcome, Alex 👋" — large bold greeting (referencing the Sapphire UI "Hi, Michael! What do you want?" style)
+- Subtitle: "Here's what's happening across your AI team today."
+- No sticky header bar — the greeting **is** the header
+
+**2. Stat Cards Row (4 cards, responsive grid)**
+
+| Card | Value | Subtext | Icon |
+|---|---|---|---|
+| Total Agents | `12` | `+2 this week` | Bot icon |
+| Active Conversations | `847` | `+12.4% from last week` | MessageSquare icon |
+| Messages Sent Today | `3,291` | `+8.3% from yesterday` | Send icon |
+| Knowledge Sources | `7` | `2.4 GB / 10 GB` (mini progress bar) | Database icon |
+
+- Each card styled as a dark card (`bg-[#161b2e]`) with rounded-xl, subtle border, and a soft inner glow/lighting effect inspired by the reference
+- "View all" small text link on each card (navigates to the corresponding page)
+- Percentage change indicator with color coding (slate tones)
+
+**3. Charts Row 1 (2-column grid)**
+
+| Left: Conversations Over Time | Right: Conversation Status |
+|---|---|
+| **Line/Area chart** — 7-day trend | **Donut chart** — Resolved / Escalated / Ongoing |
+| X-axis: Mon–Sun, Y-axis: count | Center label showing total count |
+| Smooth curve, filled area under the line in primary `#55b7e0` with gradient fade | 3 segments using primary, orange `#fab728`, and slate |
+
+**4. Charts Row 2 (2-column grid)**
+
+| Left: Messages Sent vs Received | Right: Agent Usage Heatmap |
+|---|---|
+| **Grouped bar chart** — daily comparison | **Heatmap grid** — agents × days |
+| X-axis: Mon–Sun, two bars per day (sent = primary, received = lighter tint) | Rows = agent names, Cols = days of the week |
+| Rounded bar caps | Cell intensity = number of interactions (darker = more) |
+
+**5. Quick Actions Row (3 buttons)**
+
+| Button | Action | Style |
+|---|---|---|
+| `+ Create New Agent` | Navigate → `/agents` | Outlined card with icon |
+| `+ Add Knowledge Source` | Navigate → `/knowledge` | Outlined card with icon |
+| `View Latest Conversations →` | Navigate → `/conversations` | Outlined card with icon |
+
+All quick-action buttons styled as clickable cards (not standard buttons) — matching the reference's card aesthetic.
+
+---
+
+### Routing & Navigation
+
+#### [MODIFY] [App.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/App.tsx)
+
+- Import the new `Dashboard` component
+- Add route: `<Route path="/dashboard" element={<Dashboard />} />`
+- Change default redirect from `/agents` → `/dashboard`
+
+```diff
++import { Dashboard } from './pages/Dashboard';
+ ...
+-<Route path="/" element={<Navigate to="/agents" replace />} />
++<Route path="/" element={<Navigate to="/dashboard" replace />} />
++<Route path="/dashboard" element={<Dashboard />} />
+```
+
+#### [MODIFY] [Sidebar.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/components/Sidebar.tsx)
+
+- Remove `disabled: true` from the Dashboard nav item
+
+```diff
+-{ icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', disabled: true },
++{ icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+```
+
+---
+
+## Design Tokens (from reference — adapted to our palette)
+
+| Element | Style |
+|---|---|
+| Card background | `bg-[#161b2e]` (dark) / `bg-white` (light) |
+| Card border | `border border-slate-800` with optional subtle glow |
+| Card radius | `rounded-xl` |
+| Chart area fill | `#55b7e0` with 20% opacity gradient |
+| Chart line stroke | `#55b7e0` solid |
+| Secondary chart color | `#fab728` (orange) |
+| Heatmap cells | Slate-900 (min) → `#55b7e0` (max) |
+| Stat numbers | `text-3xl font-black` |
+| Stat labels | `text-sm text-slate-400` |
+| % change positive | `text-slate-300` with `↑` arrow |
+| Quick actions | Dashed border card, hover → solid border + subtle bg shift |
+
+---
+
+## Files Summary
+
+| File | Action |
+|---|---|
+| `pages/Dashboard.tsx` | **NEW** — full dashboard page |
+| [App.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/App.tsx) | **MODIFY** — add route, change default redirect |
+| [components/Sidebar.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/components/Sidebar.tsx) | **MODIFY** — enable Dashboard link |
+| [package.json](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/package.json) | **MODIFY** — `recharts` added via npm install |
+
+---
+
+## Verification Plan
+
+1. Run `npm run dev` and open `http://localhost:3000`
+2. Confirm the app now **defaults to the Dashboard** page
+3. Confirm the sidebar "Dashboard" link is **no longer disabled**
+4. Verify all 4 stat cards render with mock data
+5. Verify all 4 chart widgets render (line, bar, donut, heatmap)
+6. Verify the 3 quick-action buttons navigate to their respective pages
+7. Verify the page is fully scrollable and responsive

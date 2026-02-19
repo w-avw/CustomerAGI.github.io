@@ -1,0 +1,9 @@
+/* 
+  Index CSS for BotNexus 
+  The project primarily uses Tailwind via CDN, 
+  but this file is referenced in index.html.
+*/
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

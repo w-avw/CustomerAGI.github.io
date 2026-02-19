@@ -1,0 +1,76 @@
+# Launch CustomerAGI Website on Localhost:3000
+
+## Goal
+
+Start the Vite dev server on `localhost:3000` so the website is accessible **only locally** — no public URL, no elevated privileges, no data exposure.
+
+---
+
+## Pre-Flight Security Analysis
+
+Following the **Cyber-Sentinel Architect** protocol from [.agent/Rules/security.md](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/.agent/Rules/security.md):
+
+### Step 1 — Install Dependencies (`npm install`)
+
+| Check | Assessment |
+|---|---|
+| **Impact Analysis** | **Local** — writes only to `node_modules/` inside the project directory. No system-wide changes. |
+| **Security Threat Model** | Low risk. `npm install` reads [package.json](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/package.json) and downloads packages from the npm registry. The dependencies are standard, well-known libraries (React, Vite, Lucide, etc.). No post-install scripts that modify system state. |
+| **Sanity Check** | This is the standard, non-administrative way to install JS dependencies. No alternatives needed. |
+
+> **ACTION:** `npm install`  
+> **RATIONALE:** Vite and other dependencies are missing from `node_modules`. The project cannot start without them.  
+> **SECURITY RATING:** Low Risk  
+> **UNDO ACTION:** `Remove-Item -Recurse -Force node_modules` (deletes installed packages)
+
+---
+
+### Step 2 — Start Dev Server (`npm run dev`)
+
+| Check | Assessment |
+|---|---|
+| **Impact Analysis** | **Local only** — Vite binds to `localhost:3000`. However, [vite.config.ts](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/vite.config.ts) has `host: '0.0.0.0'` which would expose the server to the local network. **This will be changed to `localhost`** before starting. |
+| **Security Threat Model** | With `host: 'localhost'`, only this machine can access it. No data exfiltration, no external connections beyond loading CDN fonts/Tailwind (which the project already requires). |
+| **Sanity Check** | `npm run dev` is the standard Vite dev command. No admin privileges needed. |
+
+> **ACTION:** `npm run dev`  
+> **RATIONALE:** Starts the Vite development server on port 3000.  
+> **SECURITY RATING:** Low Risk (after host fix)  
+> **UNDO ACTION:** `Ctrl+C` or terminate the process (the server stops immediately, no persistent changes)
+
+---
+
+## Proposed Changes
+
+### Security Fix — Restrict Server to Localhost
+
+#### [MODIFY] [vite.config.ts](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/vite.config.ts)
+
+Change `host: '0.0.0.0'` → `host: 'localhost'` to ensure the dev server is **not** accessible from other devices on the network.
+
+```diff
+ server: {
+   port: 3000,
+-  host: '0.0.0.0',
++  host: 'localhost',
+ },
+```
+
+> [!CAUTION]
+> The current config (`host: '0.0.0.0'`) would make the dev server accessible to **any device on your local network**. This fix ensures only your machine can reach it.
+
+---
+
+## Execution Steps
+
+1. Fix [vite.config.ts](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/vite.config.ts) — restrict host to `localhost`
+2. Run `npm install` — install project dependencies
+3. Run `npm run dev` — start the Vite dev server
+4. Verify `localhost:3000` is accessible in the browser
+
+## Verification Plan
+
+### Browser Verification
+- Open `http://localhost:3000` in the browser using the browser tool
+- Confirm the website loads and shows the sidebar with "BotNexus" branding and navigation links
+- Confirm the Agent Builder page renders as the default route

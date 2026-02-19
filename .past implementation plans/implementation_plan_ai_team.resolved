@@ -1,0 +1,90 @@
+# AI Team Page — Implementation Plan (v2)
+
+## Goal
+
+Transform the "Agents" section into a full **AI Team** management hub. The existing single-agent editor becomes a sub-page, while the main page becomes a gallery of **Team Cards**.
+
+## Reference Images
+
+````carousel
+![Status Badges — Approved (green), Pending (amber)](C:\Users\Daniel Roldan CT\.gemini\antigravity\brain\3098684c-2a29-4ff2-9f09-9f23c6650f49\ref_status_badges.png)
+<!-- slide -->
+![Card Design — Dark card, rounded Avatar, big bottom buttons](C:\Users\Daniel Roldan CT\.gemini\antigravity\brain\3098684c-2a29-4ff2-9f09-9f23c6650f49\ref_ai_team_card.png)
+````
+
+> [!IMPORTANT]
+> - **Concept:** 1 Card = 1 Team (containing multiple agents).
+> - **Colors:** Use App Primary `#55b7e0` (Blue/Cyan) and Grey/Slate tones. **No Green/Amber**.
+> - **Badges:** Active = Primary Color. Pending = Grey. Approved = Primary.
+
+---
+
+## Proposed Changes
+
+### 1. Rename & Refactor
+
+#### [RENAME] [AgentBuilder.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/AgentBuilder.tsx) → `AgentEditor.tsx`
+The existing editor becomes the sub-page for configuring a specific agent.
+
+#### [NEW] `pages/AITeamGallery.tsx`
+The new landing page for `/agents`.
+
+**Layout & Design:**
+- **Header:** "AI Team" title + "Create Team" button (or similar global action).
+- **Grid:** Responsive grid of **Team Cards**.
+- **Card Design:**
+  - Dark background (`bg-[#161b2e]`).
+  - **Top Section:**
+    - **Icon:** Rounded customizable icon (Trophy, Cash, Handshake, Gear, etc.).
+    - **Team Name:** H3 Bold.
+  - **Middle Section:**
+    - **"Agents Inside":** List of agents in the team.
+    - Each item in the list is clickable -> navigates to `AgentEditor` for that agent.
+  - **Bottom Actions (Side-by-Side):**
+    - **Primary Button:** "Create Agent" (Goes to blank Agent Form for this team).
+    - **Secondary Button:** "Configure Team" (Goes to Team Settings - placeholder for now, maybe `AgentEditor` default per instruction).
+
+### 2. Feature Enhancements (AgentEditor)
+
+**Header:**
+- Add **"Duplicate into a Team"** dropdown button.
+- Update "Save Draft" / "Publish" to show **Status Badges** on click.
+  - **Saved/Active:** Primary Blue Pill (`#55b7e0`).
+  - **Unsaved/Pending:** Grey Pill.
+
+**Content:**
+- **Custom Tone:** Add "Custom" pill. When selected, show a text input below.
+- **Chat Preview:** "Send" button triggers a "No AI Connected yet" popup.
+
+### 3. Routing & Navigation
+
+#### [MODIFY] [App.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/App.tsx)
+- Route `/agents` → `AITeamGallery`
+- Route `/agents/new` → `AgentEditor` (blank state)
+- Route `/agents/:id` → `AgentEditor` (with ID)
+
+#### [MODIFY] [Sidebar.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/components/Sidebar.tsx)
+- Rename label: "Agents" → "AI Team"
+
+---
+
+## Execution Steps
+
+1.  **Rename** [AgentBuilder.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/AgentBuilder.tsx) to `AgentEditor.tsx`.
+2.  **Create** `AITeamGallery.tsx` with the Team Card design.
+3.  **Update** [App.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/App.tsx) routing.
+4.  **Update** [Sidebar.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/components/Sidebar.tsx) label.
+5.  **Enhance** `AgentEditor.tsx` with new badges, buttons, and logic.
+
+## Verification
+- Open `/agents` → See AI Team Gallery with example Team Cards.
+- Card Interaction:
+  - Verify Icon and Team Name.
+  - Click an Agent in list → Open Editor.
+  - Click "Create Agent" → Open Blank Editor.
+  - Click "Configure Team" → Placeholder/Editor.
+- Editor Interaction:
+  - Check Status Badges (Blue/Grey).
+  - Check Custom Tone input.
+  - Check "Duplicate" button.
+  - Check "No AI" popup on chat.
