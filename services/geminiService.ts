@@ -40,6 +40,9 @@ export const sendMessageToAgent = async (chat: Chat, message: string): Promise<s
 export const analyzeConversation = async (history: Message[]): Promise<string> => {
   try {
     const transcript = history.map(m => `${m.role.toUpperCase()}: ${m.text}`).join('\n');
+    if (!ai) {
+      return "AI analysis unavailable (Missing API Key).";
+    }
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Analyze the following chat transcript. provide a very brief 1-sentence summary of the user's issue and sentiment.
