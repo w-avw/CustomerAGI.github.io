@@ -1,0 +1,40 @@
+# Knowledge & Tools Page — Implementation Plan
+
+## Goal
+Update the **Knowledge & Tools** page to align with the new design system (Primary Blue: `#55b7e0`, Warning Orange: `#fab728`) and improve functionality.
+
+## Proposed Changes
+
+### [MODIFY] [KnowledgeBase.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/KnowledgeBase.tsx)
+
+#### UI/UX Updates
+- **Color Palette**: Replace primary blue with `#55b7e0` and warning states with `#fab728`.
+- **Status Badges**: Use slate grays for "Indexed", "Active", "Resolved" badges to maintain a professional SaaS aesthetic.
+- **Removals**: Delete the `.mp4` video knowledge source as per the revised structure.
+- **Tab System**:
+  - Implement a state-based tab switcher between `📄 Knowledge Base` and `🧩 Tools & API`.
+  - When `Knowledge Base` is selected, show the "Data Sources" grid.
+  - When `Tools & API` is selected, show the "Tools & Extensions" table.
+
+#### Data Sources Section
+- **PDF Card**: Styled with refined typography and the new status badge.
+- **Web Card**: Includes the spinning "Updating..." indicator with warning color `#fab728`.
+- **Hover States**: Cards should have a subtle shadow lift and title color shift on hover.
+
+#### Tools & Extensions Section
+- **Table Styling**: Clean table with hover states and a functional "Config" button that navigates to `/tools/1`.
+- **"Connect Tool" Button**: Styled as a primary CTA.
+
+#### Floating Status Widget
+- Update colors and positioning to match the Dashboard's aesthetics.
+
+## Verification Plan
+
+### Automated Tests
+- Check for accessibility (aria-labels).
+- Verify navigation via "Config" button.
+
+### Manual Verification
+- Test tab switching.
+- Verify dark/light mode transition on cards.
+- Check "No AI Connected yet" indicators (if applicable).

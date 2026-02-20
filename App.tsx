@@ -5,7 +5,8 @@ import { AgentEditor } from './pages/AgentEditor';
 import { AITeamGallery } from './pages/AITeamGallery';
 import { Dashboard } from './pages/Dashboard';
 import { KnowledgeBase } from './pages/KnowledgeBase';
-import { ToolConfig } from './pages/ToolConfig';
+import { APIConfigurator } from './pages/APIConfigurator';
+import { JSConfigurator } from './pages/JSConfigurator';
 import { ConversationHistory } from './pages/ConversationHistory';
 import { Settings } from './pages/Settings';
 
@@ -31,7 +32,9 @@ const App: React.FC = () => {
           <Route path="/agents/new" element={<AgentEditor />} />
           <Route path="/agents/:id" element={<AgentEditor />} />
           <Route path="/knowledge" element={<KnowledgeBase />} />
-          <Route path="/tools/:id" element={<ToolConfig />} />
+          <Route path="/tools/new/api" element={<APIConfigurator />} />
+          <Route path="/tools/new/script" element={<JSConfigurator />} />
+          <Route path="/tools/:id" element={<APIConfigurator />} /> {/* Keeping for mock backward compatibility */}
           <Route path="/conversations" element={<ConversationHistory />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>

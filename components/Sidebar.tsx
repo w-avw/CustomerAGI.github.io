@@ -4,7 +4,6 @@ import {
     LayoutDashboard,
     Bot,
     Database,
-    BarChart3,
     Settings,
     Plus,
     MessageSquare,
@@ -17,7 +16,6 @@ export const Sidebar: React.FC = () => {
         { icon: Bot, label: 'AI Team', path: '/agents' },
         { icon: Database, label: 'Knowledge Base', path: '/knowledge' },
         { icon: MessageSquare, label: 'Conversations', path: '/conversations' },
-        { icon: BarChart3, label: 'Analytics', path: '/analytics', disabled: true },
     ];
 
     const adminItems = [
