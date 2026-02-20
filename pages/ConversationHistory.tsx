@@ -10,7 +10,9 @@ import {
     Send,
     Trash2,
     RefreshCw,
-    ChevronDown
+    ChevronDown,
+    Menu,
+    X
 } from 'lucide-react';
 import { Message } from '../types';
 
@@ -25,14 +27,29 @@ export const ConversationHistory: React.FC = () => {
 
     const [isHumanTakeover, setIsHumanTakeover] = useState(false);
     const [humanMessage, setHumanMessage] = useState("");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-full bg-slate-50 dark:bg-[#0a0d18] overflow-hidden">
+        <div className="flex h-full bg-slate-50 dark:bg-[#0a0d18] overflow-hidden relative">
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* List Sidebar */}
-            <aside className="w-[380px] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] flex flex-col z-10 shrink-0">
+            <aside className={`w-[85vw] max-w-[380px] md:w-[380px] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] flex flex-col z-50 shrink-0 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 shadow-2xl md:shadow-none`}>
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4">
                         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Conversations</h1>
+                        <button
+                            className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-800 transition-colors"
+                            onClick={() => setIsSidebarOpen(false)}
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
 
                     {/* Search Bar */}
@@ -130,15 +147,22 @@ export const ConversationHistory: React.FC = () => {
             {/* Main Chat Area */}
             <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0a0d18]">
                 {/* Header */}
-                <header className="flex items-center justify-between px-6 h-[80px] bg-white dark:bg-[#161b2e] border-b border-slate-200 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-6">
+                <header className="flex items-center justify-between px-4 sm:px-6 h-[80px] bg-white dark:bg-[#161b2e] border-b border-slate-200 dark:border-slate-800 shrink-0">
+                    <div className="flex items-center gap-3 sm:gap-6 w-full max-w-[60%] sm:max-w-none justify-start">
+                        <button
+                            className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-800 shrink-0"
+                            onClick={() => setIsSidebarOpen(true)}
+                        >
+                            <Menu size={24} />
+                        </button>
+
                         {/* User Details */}
                         <div className="flex items-center gap-3">
-                            <div className="size-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 shadow-inner">
+                            <div className="hidden sm:flex size-10 bg-slate-100 dark:bg-slate-800 rounded-full items-center justify-center text-slate-600 dark:text-slate-400 shadow-inner">
                                 <User size={20} />
                             </div>
-                            <div>
-                                <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-none">User #12940</h3>
+                            <div className="truncate">
+                                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-none truncate">User #12940</h3>
                                 <div className="flex items-center gap-1.5 mt-1.5">
                                     <div className="size-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"></div>
                                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Active now</p>
@@ -146,10 +170,10 @@ export const ConversationHistory: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="w-px h-10 bg-slate-200 dark:bg-slate-800"></div>
+                        <div className="hidden sm:block w-px h-10 bg-slate-200 dark:bg-slate-800"></div>
 
                         {/* Highly Visual Assigned Agent Selector */}
-                        <div className="flex flex-col">
+                        <div className="hidden sm:flex flex-col">
                             <p className="text-[9px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Active Agent Handing User</p>
                             <div className="flex items-center gap-2 bg-primary-50 dark:bg-[#1e2746] border border-primary-200 dark:border-primary-800/50 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors shadow-sm">
                                 <div className="size-5 rounded bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white shrink-0 shadow-sm">
@@ -161,35 +185,38 @@ export const ConversationHistory: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                         {/* Takeover Toggle */}
                         <button
                             onClick={() => setIsHumanTakeover(!isHumanTakeover)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${isHumanTakeover
-                                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400 hover:dark:bg-amber-500/30'
-                                    : 'bg-primary-50 text-primary-600 border border-primary-100 hover:bg-primary-100 dark:bg-primary-500/10 dark:border-primary-500/20 dark:text-primary-400 hover:dark:bg-primary-500/20'
+                            className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm ${isHumanTakeover
+                                ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400 hover:dark:bg-amber-500/30'
+                                : 'bg-primary-50 text-primary-600 border border-primary-100 hover:bg-primary-100 dark:bg-primary-500/10 dark:border-primary-500/20 dark:text-primary-400 hover:dark:bg-primary-500/20'
                                 }`}
                         >
                             {isHumanTakeover ? (
                                 <>
-                                    <Bot size={16} /> Resume AI Handover
+                                    <Bot size={16} /> <span className="hidden sm:inline">Resume AI Handover</span>
                                 </>
                             ) : (
                                 <>
-                                    <Headphones size={16} /> Human Take Over
+                                    <Headphones size={16} /> <span className="hidden sm:inline">Human Take Over</span>
                                 </>
                             )}
                         </button>
 
-                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                        <div className="hidden sm:block w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-1">
-                            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-lg transition-colors" title="Export CSV">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                            <button className="hidden sm:block p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-lg transition-colors" title="Export CSV">
                                 <Download size={18} />
                             </button>
-                            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-lg transition-colors" title="Add Tag">
+                            <button className="hidden sm:block p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-lg transition-colors" title="Add Tag">
                                 <Tag size={18} />
+                            </button>
+                            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-lg transition-colors" title="More Options">
+                                <MoreHorizontal size={18} />
                             </button>
                             <button className="p-2 text-red-500/80 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Delete Conversation">
                                 <Trash2 size={18} />
@@ -219,8 +246,8 @@ export const ConversationHistory: React.FC = () => {
                                     </span>
                                 )}
                                 <div className={`p-3.5 sm:p-4 rounded-2xl shadow-sm leading-relaxed text-[13px] sm:text-sm ${msg.role === 'user'
-                                        ? 'bg-primary-600 text-white rounded-tr-md'
-                                        : 'bg-white dark:bg-[#161b2e] border border-slate-200/50 dark:border-slate-800 rounded-tl-md text-slate-700 dark:text-slate-300'
+                                    ? 'bg-primary-600 text-white rounded-tr-md'
+                                    : 'bg-white dark:bg-[#161b2e] border border-slate-200/50 dark:border-slate-800 rounded-tl-md text-slate-700 dark:text-slate-300'
                                     }`}>
                                     {msg.text}
                                 </div>
@@ -257,8 +284,8 @@ export const ConversationHistory: React.FC = () => {
                         />
                         <button
                             className={`p-3 rounded-xl flex items-center justify-center transition-all shrink-0 ${humanMessage.trim()
-                                    ? 'bg-amber-500 text-white shadow-md hover:bg-amber-600 hover:shadow-lg hover:shadow-amber-500/30'
-                                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                                ? 'bg-amber-500 text-white shadow-md hover:bg-amber-600 hover:shadow-lg hover:shadow-amber-500/30'
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                 }`}
                         >
                             <Send size={18} className={humanMessage.trim() ? 'translate-x-0.5' : ''} />

@@ -12,7 +12,7 @@ export const APIConfigurator: React.FC = () => {
             {/* Header */}
             <header className="px-8 pt-6 pb-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] shrink-0">
                 <div
-                    className="flex items-center gap-2 text-xs font-bold text-[#55b7e0] uppercase tracking-widest mb-4 cursor-pointer hover:opacity-80 transition-opacity w-fit"
+                    className="flex items-center gap-2 text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 cursor-pointer hover:opacity-80 transition-opacity w-fit"
                     onClick={() => navigate('/knowledge')}
                 >
                     <ArrowLeft size={14} strokeWidth={3} />
@@ -49,22 +49,22 @@ export const APIConfigurator: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex gap-8">
-                    <button className="px-1 py-4 border-b-2 border-[#55b7e0] text-[#55b7e0] text-sm font-bold flex items-center gap-2">
+                    <button className="px-1 py-4 border-b-2 border-primary-500 text-primary-500 text-sm font-bold flex items-center gap-2">
                         <LinkIcon size={18} />
                         API Connection
                     </button>
                 </div>
             </header>
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden custom-scrollbar">
                 {/* Configuration Form */}
-                <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                <div className="flex-1 shrink-0 overflow-visible lg:overflow-y-auto p-6 lg:p-10 custom-scrollbar">
                     <div className="max-w-3xl space-y-12 pb-24">
                         {/* Tool Identity (for new tools) */}
                         {!isEditing && (
                             <section className="space-y-6">
                                 <div className="flex items-center gap-2 text-slate-400">
-                                    <LinkIcon size={16} className="text-[#55b7e0]" />
+                                    <LinkIcon size={16} className="text-primary-500" />
                                     <h3 className="text-xs font-bold uppercase tracking-[0.2em]">Tool Identity</h3>
                                 </div>
                                 <div className="space-y-4">
@@ -73,7 +73,7 @@ export const APIConfigurator: React.FC = () => {
                                         <input
                                             type="text"
                                             placeholder="e.g. Customer CRM API"
-                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent outline-none transition-all shadow-sm font-bold"
+                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm font-bold"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -81,7 +81,7 @@ export const APIConfigurator: React.FC = () => {
                                         <textarea
                                             placeholder="Describe what this API does so the agent knows when to use it..."
                                             rows={2}
-                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent outline-none transition-all shadow-sm"
+                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -90,13 +90,13 @@ export const APIConfigurator: React.FC = () => {
 
                         <section className="space-y-6">
                             <div className="flex items-center gap-2 text-slate-400">
-                                <LinkIcon size={16} className="text-[#55b7e0]" />
+                                <LinkIcon size={16} className="text-primary-500" />
                                 <h3 className="text-xs font-bold uppercase tracking-[0.2em]">Request Configuration</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div className="md:col-span-1 space-y-2">
                                     <label className="block text-xs font-bold text-slate-500 ml-1">HTTP Method</label>
-                                    <select className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent outline-none transition-all cursor-pointer shadow-sm">
+                                    <select className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all cursor-pointer shadow-sm">
                                         <option>GET</option>
                                         <option>POST</option>
                                         <option>PUT</option>
@@ -109,7 +109,7 @@ export const APIConfigurator: React.FC = () => {
                                         type="text"
                                         defaultValue={isEditing ? "https://api.crm-connector.io/v1/customer/lookup" : ""}
                                         placeholder="https://api.example.com/v1/resource"
-                                        className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent outline-none font-mono shadow-sm transition-all"
+                                        className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono shadow-sm transition-all"
                                     />
                                 </div>
                             </div>
@@ -118,10 +118,10 @@ export const APIConfigurator: React.FC = () => {
                         <section className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 text-slate-400">
-                                    <LinkIcon size={16} className="text-[#55b7e0]" />
+                                    <LinkIcon size={16} className="text-primary-500" />
                                     <h3 className="text-xs font-bold uppercase tracking-[0.2em]">Auth Headers</h3>
                                 </div>
-                                <button className="text-[#55b7e0] text-xs font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity bg-sky-50 dark:bg-sky-900/20 px-3 py-1.5 rounded-lg border border-sky-100 dark:border-sky-900/30">
+                                <button className="text-primary-500 text-xs font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity bg-primary-50 dark:bg-primary-900/20 px-3 py-1.5 rounded-lg border border-primary-100 dark:border-primary-900/30">
                                     <PlusCircle size={14} strokeWidth={2.5} />
                                     Add Header
                                 </button>
@@ -165,12 +165,12 @@ export const APIConfigurator: React.FC = () => {
                 </div>
 
                 {/* Test Panel */}
-                <div className="w-[420px] border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d18] flex flex-col shrink-0">
+                <div className="w-full lg:w-[420px] border-t lg:border-t-0 border-l-0 lg:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d18] flex flex-col shrink-0 min-h-[600px] lg:min-h-0">
                     <div className="p-6 h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-[#161b2e] shrink-0">
                         <div className="flex items-center gap-2">
                             <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">Simulator</h4>
                         </div>
-                        <button className="bg-[#55b7e0] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#4aa3c8] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95">
+                        <button className="bg-primary-500 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-primary-400 transition-all flex items-center gap-2 shadow-lg shadow-primary-500/20 active:scale-95">
                             <Play size={14} fill="currentColor" />
                             Run Action
                         </button>
@@ -182,12 +182,12 @@ export const APIConfigurator: React.FC = () => {
                             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] p-5 space-y-4 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">user_id</span>
-                                    <input type="text" defaultValue="USR-99021" className="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-1.5 min-w-[120px] text-right font-bold text-[#55b7e0] focus:ring-1 focus:ring-[#55b7e0] outline-none" />
+                                    <input type="text" defaultValue="USR-99021" className="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-1.5 min-w-[120px] text-right font-bold text-primary-500 focus:ring-1 focus:ring-primary-500 outline-none" />
                                 </div>
                                 <div className="h-px bg-slate-100 dark:bg-slate-800"></div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">context</span>
-                                    <input type="text" defaultValue="premium_support" className="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-1.5 min-w-[120px] text-right font-bold text-slate-600 dark:text-slate-300 focus:ring-1 focus:ring-[#55b7e0] outline-none" />
+                                    <input type="text" defaultValue="premium_support" className="text-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-1.5 min-w-[120px] text-right font-bold text-slate-600 dark:text-slate-300 focus:ring-1 focus:ring-primary-500 outline-none" />
                                 </div>
                             </div>
                         </div>

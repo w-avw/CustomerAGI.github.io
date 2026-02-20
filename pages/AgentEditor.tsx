@@ -3,6 +3,7 @@ import { Save, Play, RefreshCw, Send, Sparkles, User, Bot as BotIcon, MoreHorizo
 import { AgentConfig, Message } from '../types';
 import { createAgentChat, sendMessageToAgent } from '../services/geminiService';
 import { Chat } from '@google/genai';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const AgentEditor: React.FC = () => {
     const [config, setConfig] = useState<AgentConfig>({
@@ -25,6 +26,7 @@ export const AgentEditor: React.FC = () => {
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const [mobileTab, setMobileTab] = useState<'config' | 'testing'>('config');
 
     // Initialize Chat
     useEffect(() => {
@@ -101,8 +103,8 @@ export const AgentEditor: React.FC = () => {
                             onClick={() => setStatus('active')}
                             className={`px-4 py-2 text-sm font-bold rounded-lg shadow-md transition-all flex items-center gap-2
                                 ${status === 'active'
-                                    ? 'bg-[#55b7e0] text-white shadow-sky-500/20 cursor-default'
-                                    : 'bg-[#55b7e0] hover:bg-[#4aa3c8] text-white shadow-sky-500/20'
+                                    ? 'bg-primary-500 text-white shadow-primary-500/20 cursor-default'
+                                    : 'bg-primary-500 hover:bg-primary-400 text-white shadow-primary-500/20'
                                 }
                             `}
                         >
@@ -112,7 +114,23 @@ export const AgentEditor: React.FC = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                {/* Mobile Tabs */}
+                <div className="md:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] shrink-0 sticky top-0 z-20">
+                    <button
+                        className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${mobileTab === 'config' ? 'border-primary-500 text-primary-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        onClick={() => setMobileTab('config')}
+                    >
+                        Configuration
+                    </button>
+                    <button
+                        className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${mobileTab === 'testing' ? 'border-primary-500 text-primary-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        onClick={() => setMobileTab('testing')}
+                    >
+                        Testing
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
                     <div className="max-w-3xl mx-auto space-y-8 pb-12">
                         <section>
                             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Agent Configuration</h1>
@@ -214,98 +232,112 @@ export const AgentEditor: React.FC = () => {
                 </div>
             </div>
 
-            {/* Preview Panel */}
-            <div className="w-[400px] border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d18] flex flex-col shrink-0">
-                <div className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 bg-white dark:bg-[#161b2e]">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent Preview</h3>
-                    </div>
-                    <button
-                        onClick={handleRestartChat}
-                        className="p-2 text-slate-400 hover:text-[#55b7e0] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                        title="Restart Chat with new settings"
+            {/* Preview Panel (Sliding on Mobile, Static on Desktop) */}
+            <AnimatePresence>
+                {(mobileTab === 'testing' || window.innerWidth >= 768) && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                        className={`
+                            absolute inset-0 z-30 md:static md:w-[400px] md:z-auto
+                            md:!transform-none 
+                            border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d18] flex flex-col shrink-0
+                        `}
                     >
-                        <RefreshCw size={18} />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-[#0a0d18] custom-scrollbar">
-                    <div className="flex justify-center">
-                        <span className="px-3 py-1 bg-slate-200 dark:bg-slate-800 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            Session Started
-                        </span>
-                    </div>
-
-                    {messages.map((msg) => (
-                        <div key={msg.id} className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-                            <div className={`
-                                size-8 rounded-lg flex items-center justify-center shrink-0
-                                ${msg.role === 'user' ? 'bg-slate-200 dark:bg-slate-800 text-slate-500' : 'bg-sky-100 dark:bg-sky-900/30 text-[#55b7e0]'}
-                            `}>
-                                {msg.role === 'user' ? <User size={16} /> : <BotIcon size={16} />}
+                        <div className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 bg-white dark:bg-[#161b2e] sticky top-0 hidden md:flex">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent Preview</h3>
                             </div>
-                            <div className={`
+                            <button
+                                onClick={handleRestartChat}
+                                className="p-2 text-slate-400 hover:text-primary-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                title="Restart Chat with new settings"
+                            >
+                                <RefreshCw size={18} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-[#0a0d18] custom-scrollbar">
+                            <div className="flex justify-center">
+                                <span className="px-3 py-1 bg-slate-200 dark:bg-slate-800 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    Session Started
+                                </span>
+                            </div>
+
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
+                                    <div className={`
+                                size-8 rounded-lg flex items-center justify-center shrink-0
+                                ${msg.role === 'user' ? 'bg-slate-200 dark:bg-slate-800 text-slate-500' : 'bg-primary-100 dark:bg-primary-900/30 text-primary-500'}
+                            `}>
+                                        {msg.role === 'user' ? <User size={16} /> : <BotIcon size={16} />}
+                                    </div>
+                                    <div className={`
                                 p-3 rounded-2xl text-sm leading-relaxed shadow-sm
                                 ${msg.role === 'user'
-                                    ? 'bg-[#55b7e0] text-white rounded-tr-none'
-                                    : 'bg-white dark:bg-[#161b2e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-tl-none'
-                                }
+                                            ? 'bg-primary-500 text-white rounded-tr-none'
+                                            : 'bg-white dark:bg-[#161b2e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-tl-none'
+                                        }
                             `}>
-                                {msg.text}
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {isTyping && (
+                                <div className="flex gap-3 max-w-[90%]">
+                                    <div className="size-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-[#55b7e0] flex items-center justify-center shrink-0">
+                                        <BotIcon size={16} />
+                                    </div>
+                                    <div className="bg-white dark:bg-[#161b2e] p-4 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 flex gap-1 items-center shadow-sm">
+                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></span>
+                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-200"></span>
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={chatEndRef} />
+                        </div>
+
+                        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e]">
+                            <div className="relative">
+                                <textarea
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSendMessage();
+                                        }
+                                    }}
+                                    className="w-full pr-12 pl-4 py-3 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent text-sm resize-none custom-scrollbar outline-none transition-all dark:text-white"
+                                    placeholder="Type a message to test..."
+                                    rows={1}
+                                />
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={!inputText.trim() || isTyping}
+                                    className="absolute right-2 top-2 size-8 bg-primary-500 text-white rounded-lg flex items-center justify-center hover:bg-primary-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Send size={16} />
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 px-1">
+                                <p className="text-[10px] text-slate-400 font-medium">Testing as: <span className="underline">Standard User</span></p>
+                                <button
+                                    onClick={() => setMessages([])}
+                                    className="text-[10px] text-primary-500 font-bold hover:underline"
+                                >
+                                    Clear History
+                                </button>
                             </div>
                         </div>
-                    ))}
-
-                    {isTyping && (
-                        <div className="flex gap-3 max-w-[90%]">
-                            <div className="size-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-[#55b7e0] flex items-center justify-center shrink-0">
-                                <BotIcon size={16} />
-                            </div>
-                            <div className="bg-white dark:bg-[#161b2e] p-4 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 flex gap-1 items-center shadow-sm">
-                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></span>
-                                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-200"></span>
-                            </div>
-                        </div>
-                    )}
-                    <div ref={chatEndRef} />
-                </div>
-
-                <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e]">
-                    <div className="relative">
-                        <textarea
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSendMessage();
-                                }
-                            }}
-                            className="w-full pr-12 pl-4 py-3 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent text-sm resize-none custom-scrollbar outline-none transition-all dark:text-white"
-                            placeholder="Type a message to test..."
-                            rows={1}
-                        />
-                        <button
-                            onClick={handleSendMessage}
-                            disabled={!inputText.trim() || isTyping}
-                            className="absolute right-2 top-2 size-8 bg-[#55b7e0] text-white rounded-lg flex items-center justify-center hover:bg-[#4aa3c8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Send size={16} />
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between mt-3 px-1">
-                        <p className="text-[10px] text-slate-400 font-medium">Testing as: <span className="underline">Standard User</span></p>
-                        <button
-                            onClick={() => setMessages([])}
-                            className="text-[10px] text-[#55b7e0] font-bold hover:underline"
-                        >
-                            Clear History
-                        </button>
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

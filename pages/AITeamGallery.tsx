@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
     Users,
     Settings,
@@ -64,92 +65,122 @@ function trophyIconWrapper() { return Trophy; }
 
 export const AITeamGallery: React.FC = () => {
     const navigate = useNavigate();
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const [width, setWidth] = useState(0);
+
+    useEffect(() => {
+        const updateWidth = () => {
+            if (carouselRef.current) {
+                setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+            }
+        };
+        updateWidth();
+        window.addEventListener('resize', updateWidth);
+        return () => window.removeEventListener('resize', updateWidth);
+    }, []);
+
+    const TeamCard: React.FC<{ team: Team, isMobile?: boolean }> = ({ team, isMobile }) => (
+        <div className={`group bg-[#161b2e] rounded-2xl border border-slate-800 p-6 flex flex-col shadow-lg hover:shadow-xl hover:shadow-black/20 transition-all duration-300 ${isMobile ? 'min-w-[85vw] snap-center mr-4' : ''}`}>
+            {/* Card Header */}
+            <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="size-14 rounded-2xl bg-primary-900/30 flex items-center justify-center text-primary-500 shadow-inner border border-primary-900/50">
+                        <team.icon size={28} strokeWidth={1.5} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-white">{team.name}</h3>
+                        <p className="text-xs text-slate-400 font-medium">{team.agents.length} Agent{team.agents.length !== 1 && 's'}</p>
+                    </div>
+                </div>
+                <button className="text-slate-600 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800">
+                    <MoreHorizontal size={20} />
+                </button>
+            </div>
+
+            {/* Agents List */}
+            <div className="flex-1 space-y-3 mb-8">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Agents Inside</h4>
+                {team.agents.length > 0 ? (
+                    <div className="space-y-2">
+                        {team.agents.map((agent) => (
+                            <button
+                                key={agent.id}
+                                onClick={() => navigate(`/agents/${agent.id}`)}
+                                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-800 group/agent transition-all text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="size-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center group-hover/agent:text-primary-500 transition-colors">
+                                        <Bot size={16} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-200 group-hover/agent:text-white transition-colors">{agent.name}</p>
+                                        <p className="text-[10px] text-slate-500">{agent.role}</p>
+                                    </div>
+                                </div>
+                                <ChevronRight size={14} className="text-slate-600 group-hover/agent:text-slate-400 transition-colors" />
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="p-4 rounded-xl border border-dashed border-slate-800 text-center">
+                        <p className="text-xs text-slate-500 italic">No agents yet</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-auto">
+                <button
+                    onClick={() => navigate('/agents/new')}
+                    className="flex-1 py-3 px-4 bg-primary-600 hover:bg-primary-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-primary-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                    <Plus size={16} strokeWidth={3} />
+                    Create Agent
+                </button>
+                <button
+                    className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-sm font-bold rounded-xl border border-slate-700 hover:border-slate-600 transition-all active:scale-95"
+                >
+                    Configure Team
+                </button>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex-1 overflow-y-auto bg-[#f5f6f8] dark:bg-[#0a0d18] custom-scrollbar">
-            <div className="max-w-7xl mx-auto px-8 py-8 space-y-8 pb-20">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8 pb-20">
 
                 {/* ── Header ─────────────────────────────── */}
-                <div className="flex items-center justify-between">
+                <div className="flex md:items-center items-start md:justify-between flex-col md:flex-row gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">AI Team</h1>
                         <p className="text-slate-500 mt-1">Manage your teams of AI agents.</p>
                     </div>
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-[#55b7e0] hover:bg-[#4aa3c8] text-white font-bold rounded-full shadow-lg shadow-sky-500/20 transition-all active:scale-95">
+                    <button className="flex items-center justify-center gap-2 w-full md:w-auto px-5 py-2.5 bg-primary-500 hover:bg-primary-400 text-white font-bold rounded-full shadow-lg shadow-primary-500/20 transition-all active:scale-95">
                         <Plus size={18} strokeWidth={3} />
                         Create Team
                     </button>
                 </div>
 
-                {/* ── Team Gallery Grid ──────────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* ── Team Gallery Framer Carousel (Mobile) ── */}
+                <div className="md:hidden">
+                    <motion.div ref={carouselRef} className="cursor-grab overflow-hidden active:cursor-grabbing">
+                        <motion.div
+                            drag="x"
+                            dragConstraints={{ right: 0, left: -width }}
+                            className="flex"
+                        >
+                            {teams.map((team) => (
+                                <TeamCard key={team.id} team={team} isMobile={true} />
+                            ))}
+                        </motion.div>
+                    </motion.div>
+                </div>
+
+                {/* ── Team Gallery Grid (Desktop) ──────────── */}
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {teams.map((team) => (
-                        <div key={team.id} className="group bg-[#161b2e] rounded-2xl border border-slate-800 p-6 flex flex-col shadow-lg hover:shadow-xl hover:shadow-black/20 transition-all duration-300">
-
-                            {/* Card Header */}
-                            <div className="flex items-start justify-between mb-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="size-14 rounded-2xl bg-slate-800/50 flex items-center justify-center text-[#55b7e0] shadow-inner border border-slate-700/50">
-                                        <team.icon size={28} strokeWidth={1.5} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-white">{team.name}</h3>
-                                        <p className="text-xs text-slate-400 font-medium">{team.agents.length} Agent{team.agents.length !== 1 && 's'}</p>
-                                    </div>
-                                </div>
-                                <button className="text-slate-600 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800">
-                                    <MoreHorizontal size={20} />
-                                </button>
-                            </div>
-
-                            {/* Agents List */}
-                            <div className="flex-1 space-y-3 mb-8">
-                                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Agents Inside</h4>
-                                {team.agents.length > 0 ? (
-                                    <div className="space-y-2">
-                                        {team.agents.map((agent) => (
-                                            <button
-                                                key={agent.id}
-                                                onClick={() => navigate(`/agents/${agent.id}`)}
-                                                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-800 group/agent transition-all text-left"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center group-hover/agent:text-[#55b7e0] transition-colors">
-                                                        <Bot size={16} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-200 group-hover/agent:text-white transition-colors">{agent.name}</p>
-                                                        <p className="text-[10px] text-slate-500">{agent.role}</p>
-                                                    </div>
-                                                </div>
-                                                <ChevronRight size={14} className="text-slate-600 group-hover/agent:text-slate-400 transition-colors" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-4 rounded-xl border border-dashed border-slate-800 text-center">
-                                        <p className="text-xs text-slate-500 italic">No agents yet</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-3 mt-auto">
-                                <button
-                                    onClick={() => navigate('/agents/new')}
-                                    className="flex-1 py-3 px-4 bg-[#55b7e0] hover:bg-[#4aa3c8] text-white text-sm font-bold rounded-xl shadow-lg shadow-sky-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    <Plus size={16} strokeWidth={3} />
-                                    Create Agent
-                                </button>
-                                <button
-                                    className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-sm font-bold rounded-xl border border-slate-700 hover:border-slate-600 transition-all active:scale-95"
-                                >
-                                    Configure Team
-                                </button>
-                            </div>
-
-                        </div>
+                        <TeamCard key={team.id} team={team} />
                     ))}
                 </div>
 

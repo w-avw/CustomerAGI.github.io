@@ -40,7 +40,7 @@ export const Settings: React.FC = () => {
     return (
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-[#0a0d18] scroll-smooth">
             {/* Sticky Header Nav */}
-            <div className="sticky top-0 z-20 bg-slate-50/80 dark:bg-[#0a0d18]/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-8 py-6">
+            <div className="sticky top-0 z-20 bg-slate-50/80 dark:bg-[#0a0d18]/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-4 sm:py-6">
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Settings</h2>
@@ -61,7 +61,7 @@ export const Settings: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto p-8 space-y-16 pb-32">
+            <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-12 sm:space-y-16 pb-32">
 
                 {/* General Settings */}
                 <section id="general" className="space-y-6 pt-4 scroll-mt-32">
@@ -72,7 +72,7 @@ export const Settings: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white dark:bg-[#161b2e] rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm space-y-12">
+                    <div className="bg-white dark:bg-[#161b2e] rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-8 shadow-sm space-y-8 sm:space-y-12">
                         {/* Branding */}
                         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8">
                             <div>
@@ -91,7 +91,7 @@ export const Settings: React.FC = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Workspace Name</label>
-                                    <input type="text" defaultValue="BotNexus Main" className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:ring-2 focus:ring-primary-500 focus:border-transparent px-4 py-2.5 text-sm dark:text-white outline-none transition-all shadow-sm" />
+                                    <input type="text" defaultValue="CustomerAGI Main" className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:ring-2 focus:ring-primary-500 focus:border-transparent px-4 py-2.5 text-sm dark:text-white outline-none transition-all shadow-sm" />
                                 </div>
                             </div>
                         </div>
@@ -221,7 +221,7 @@ export const Settings: React.FC = () => {
                                             <div className="size-9 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-sm border border-primary-200 dark:border-primary-800">AR</div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900 dark:text-white">Alex Rivera <span className="text-slate-400 font-medium ml-1">(You)</span></p>
-                                                <p className="text-xs text-slate-500">alex@botnexus.ai</p>
+                                                <p className="text-xs text-slate-500">alex@customeragi.com</p>
                                             </div>
                                         </div>
                                     </td>
@@ -251,8 +251,8 @@ export const Settings: React.FC = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-sm border border-slate-200 dark:border-slate-700">SJ</div>
                                             <div>
-                                                <p className="text-sm font-bold text-slate-900 dark:text-white">Sarah Jenkins</p>
-                                                <p className="text-xs text-slate-500">sarah@botnexus.ai</p>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">Sarah Jenkins</p>
+                                                <p className="text-xs text-slate-500 truncate">sarah@customeragi.com</p>
                                             </div>
                                         </div>
                                     </td>
@@ -296,7 +296,7 @@ export const Settings: React.FC = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Plan Details Card */}
-                        <div className="col-span-1 lg:col-span-2 bg-white dark:bg-[#161b2e] rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm flex flex-col justify-between">
+                        <div className="col-span-1 lg:col-span-2 bg-white dark:bg-[#161b2e] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm flex flex-col justify-between">
                             <div>
                                 <div className="flex justify-between items-start mb-6">
                                     <div>
@@ -334,8 +334,8 @@ export const Settings: React.FC = () => {
 
                         {/* Credit Card Container Shell */}
                         <div className="col-span-1 bg-white dark:bg-[#161b2e] rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col shadow-sm relative overflow-hidden backdrop-blur-md">
-                            <div className="flex items-center justify-between p-6 pb-2 z-10 relative">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-2">Payment Method</span>
+                            <div className="flex items-center justify-between p-4 sm:p-6 pb-2 z-10 relative">
+                                <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 sm:pl-2">Payment Method</span>
                                 <button className="text-xs font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
                                     Update
                                 </button>
@@ -353,7 +353,7 @@ export const Settings: React.FC = () => {
                     </div>
 
                     {/* Danger Zone */}
-                    <div className="mt-12 border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-500/5 rounded-2xl p-8 relative overflow-hidden">
+                    <div className="mt-8 sm:mt-12 border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-500/5 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div>

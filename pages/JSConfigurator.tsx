@@ -33,7 +33,7 @@ async function executeAction(data) {
             {/* Header */}
             <header className="px-8 pt-6 pb-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] shrink-0">
                 <div
-                    className="flex items-center gap-2 text-xs font-bold text-[#55b7e0] uppercase tracking-widest mb-4 cursor-pointer hover:opacity-80 transition-opacity w-fit"
+                    className="flex items-center gap-2 text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 cursor-pointer hover:opacity-80 transition-opacity w-fit"
                     onClick={() => navigate('/knowledge')}
                 >
                     <ArrowLeft size={14} strokeWidth={3} />
@@ -74,22 +74,22 @@ async function executeAction(data) {
                         <Code size={18} />
                         Custom Logic
                     </button>
-                    <button className="px-1 py-4 border-b-2 border-[#55b7e0] text-[#55b7e0] text-sm font-bold flex items-center gap-2">
+                    <button className="px-1 py-4 border-b-2 border-primary-500 text-primary-500 text-sm font-bold flex items-center gap-2">
                         <Code size={18} />
                         Editor
                     </button>
                 </div>
             </header>
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden custom-scrollbar">
                 {/* Configuration Form */}
-                <div className="flex-1 overflow-y-auto p-10 custom-scrollbar flex flex-col">
+                <div className="flex-1 shrink-0 overflow-visible lg:overflow-y-auto p-6 lg:p-10 custom-scrollbar flex flex-col">
                     <div className="max-w-4xl space-y-8 pb-12 flex-1 flex flex-col">
                         {/* Tool Identity (for new tools) */}
                         {!isEditing && (
                             <section className="space-y-6 shrink-0">
                                 <div className="flex items-center gap-2 text-slate-400">
-                                    <Code size={16} className="text-[#55b7e0]" />
+                                    <Code size={16} className="text-primary-500" />
                                     <h3 className="text-xs font-bold uppercase tracking-[0.2em]">Script Identity</h3>
                                 </div>
                                 <div className="space-y-4">
@@ -98,7 +98,7 @@ async function executeAction(data) {
                                         <input
                                             type="text"
                                             placeholder="e.g. Lead Scoring Logic"
-                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent outline-none transition-all shadow-sm font-bold"
+                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm font-bold"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -106,7 +106,7 @@ async function executeAction(data) {
                                         <textarea
                                             placeholder="Describe what this script achieves..."
                                             rows={2}
-                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-[#55b7e0] focus:border-transparent outline-none transition-all shadow-sm"
+                                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-xl text-sm px-4 py-3 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -116,19 +116,19 @@ async function executeAction(data) {
                         <section className="flex-1 flex flex-col min-h-[400px]">
                             <div className="flex items-center justify-between mb-4 shrink-0">
                                 <div className="flex items-center gap-2 text-slate-400">
-                                    <Code size={16} className="text-[#55b7e0]" />
+                                    <Code size={16} className="text-primary-500" />
                                     <h3 className="text-xs font-bold uppercase tracking-[0.2em]">Code Editor (JavaScript)</h3>
                                 </div>
                                 <div className="flex gap-4">
-                                    <button className="text-[10px] font-bold text-slate-400 hover:text-[#55b7e0] tracking-widest uppercase transition-colors">Beautify</button>
+                                    <button className="text-[10px] font-bold text-slate-400 hover:text-primary-500 tracking-widest uppercase transition-colors">Beautify</button>
                                 </div>
                             </div>
 
                             {/* Code Editor Area */}
-                            <div className="flex-1 rounded-t-2xl border border-slate-200 dark:border-slate-800 bg-[#0d121f] focus-within:ring-2 focus-within:ring-[#55b7e0] focus-within:border-transparent p-6 shadow-xl relative transition-all group overflow-hidden flex flex-col">
+                            <div className="flex-1 rounded-t-2xl border border-slate-200 dark:border-slate-800 bg-[#0d121f] focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent p-6 shadow-xl relative transition-all group overflow-hidden flex flex-col">
                                 <div className="absolute top-4 right-4 text-[10px] font-bold text-slate-700 uppercase tracking-widest select-none pointer-events-none">JS (ES6)</div>
                                 <textarea
-                                    className="w-full flex-1 bg-transparent text-[#55b7e0]/90 font-mono text-[13px] leading-relaxed resize-none outline-none custom-scrollbar"
+                                    className="w-full flex-1 bg-transparent text-primary-500 font-mono text-[13px] leading-relaxed resize-none outline-none custom-scrollbar"
                                     value={scriptContent}
                                     onChange={(e) => setScriptContent(e.target.value)}
                                     spellCheck={false}
@@ -137,7 +137,7 @@ async function executeAction(data) {
 
                             {/* Variables Helper Button */}
                             <button className="w-full bg-[#f1f5f9] dark:bg-[#1a2035] hover:bg-slate-200 dark:hover:bg-[#1e253c] border border-t-0 border-slate-200 dark:border-slate-800 rounded-b-2xl p-3 flex items-center justify-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 transition-all shadow-sm">
-                                <Variable size={14} className="text-[#55b7e0]" />
+                                <Variable size={14} className="text-primary-500" />
                                 Check all the platform variables you can use
                             </button>
                         </section>
@@ -145,12 +145,12 @@ async function executeAction(data) {
                 </div>
 
                 {/* Test Panel */}
-                <div className="w-[420px] border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d18] flex flex-col shrink-0">
+                <div className="w-full lg:w-[420px] border-t lg:border-t-0 border-l-0 lg:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0d18] flex flex-col shrink-0 min-h-[600px] lg:min-h-0">
                     <div className="p-6 h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-[#161b2e] shrink-0">
                         <div className="flex items-center gap-2">
                             <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">Simulator</h4>
                         </div>
-                        <button className="bg-[#55b7e0] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#4aa3c8] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95">
+                        <button className="bg-primary-500 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-primary-400 transition-all flex items-center gap-2 shadow-lg shadow-primary-500/20 active:scale-95">
                             <Play size={14} fill="currentColor" />
                             Test Script
                         </button>

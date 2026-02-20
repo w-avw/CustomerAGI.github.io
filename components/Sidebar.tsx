@@ -23,13 +23,13 @@ export const Sidebar: React.FC = () => {
     ];
 
     return (
-        <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] flex flex-col shrink-0 z-20">
+        <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b2e] hidden md:flex flex-col shrink-0 z-20">
             <div className="p-6 flex items-center gap-3">
                 <div className="size-10 rounded-xl bg-primary-500 flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
                     <Bot size={24} />
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="text-slate-900 dark:text-white text-base font-bold leading-tight tracking-tight">BotNexus</h1>
+                    <h1 className="text-slate-900 dark:text-white text-base font-bold leading-tight tracking-tight">CustomerAGI</h1>
                     <p className="text-primary-600 dark:text-primary-400 text-xs font-medium">Workspace v2.4</p>
                 </div>
             </div>

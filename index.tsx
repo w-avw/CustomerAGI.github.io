@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-console.log("🚀 BotNexus AI Studio is initializing...");
+console.log("🚀 CustomerAGI Studio is initializing...");
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

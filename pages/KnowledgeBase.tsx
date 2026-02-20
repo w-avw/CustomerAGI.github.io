@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
     FileText,
     Globe,
@@ -102,6 +103,35 @@ export const KnowledgeBase: React.FC = () => {
         setAiNote('');
     };
 
+    // Reusable Framer Motion Carousel for Mobile
+    const MobileCarousel = ({ children }: { children: React.ReactNode }) => {
+        const carouselRef = useRef<HTMLDivElement>(null);
+        const [width, setWidth] = useState(0);
+
+        useEffect(() => {
+            const updateWidth = () => {
+                if (carouselRef.current) {
+                    setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+                }
+            };
+            updateWidth();
+            const timeoutId = setTimeout(updateWidth, 100);
+            window.addEventListener('resize', updateWidth);
+            return () => {
+                clearTimeout(timeoutId);
+                window.removeEventListener('resize', updateWidth);
+            };
+        }, [children, activeTab]);
+
+        return (
+            <div className="md:hidden overflow-hidden active:cursor-grabbing cursor-grab" ref={carouselRef}>
+                <motion.div drag="x" dragConstraints={{ right: 0, left: -width }} className="flex">
+                    {children}
+                </motion.div>
+            </div>
+        );
+    };
+
     return (
         <div className="flex-1 overflow-y-auto bg-[#f8f9fa] dark:bg-[#0a0d18] custom-scrollbar relative">
             {/* Header */}
@@ -132,7 +162,7 @@ export const KnowledgeBase: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="bg-white dark:bg-[#161b2e] p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex shadow-sm w-fit relative overflow-hidden">
                         <div
-                            className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#55b7e0] rounded-xl transition-transform duration-300 ease-out shadow-lg shadow-sky-500/20 ${activeTab === 'knowledge' ? 'translate-x-0' : 'translate-x-full'
+                            className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-primary-500 rounded-xl transition-transform duration-300 ease-out shadow-lg shadow-primary-500/20 ${activeTab === 'knowledge' ? 'translate-x-0' : 'translate-x-full'
                                 }`}
                         />
                         <button
@@ -158,7 +188,7 @@ export const KnowledgeBase: React.FC = () => {
                             placeholder={`Search ${activeTab === 'knowledge' ? 'sources' : 'tools'}...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#55b7e0]/20 outline-none shadow-sm transition-all"
+                            className="w-full bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary-500/20 outline-none shadow-sm transition-all"
                         />
                     </div>
                 </div>
@@ -220,20 +250,90 @@ export const KnowledgeBase: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {/* PDF Card */}
-                            <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-sky-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px]">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-sky-500/10 transition-all"></div>
+                        {/* Data Sources Grid / Carousel */}
+                        <MobileCarousel>
+                            <div className="min-w-[85vw] mr-4 snap-center">
+                                {/* PDF Card */}
+                                <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
+                                    <div>
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-primary-500 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:rotate-3">
+                                                <FileText size={28} strokeWidth={1.5} />
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Indexed</span>
+                                            </div>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">Company_Policy_2024.pdf</h3>
+                                        <p className="text-xs text-slate-500 mb-6 font-medium">Internal HR guidelines, safety protocols, and company culture documentation.</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                                            <div className="flex items-center gap-1.5"><LayoutGrid size={12} /><span>42 Pages</span></div>
+                                            <div className="flex items-center gap-1.5"><Clock size={12} /><span>2d ago</span></div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setIsManageSourceOpen(true)}
+                                                className="flex-1 py-3 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center justify-center gap-2"
+                                            >
+                                                Manage <ChevronRight size={14} strokeWidth={3} />
+                                            </button>
+                                            <button className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="min-w-[85vw] snap-center">
+                                {/* Web Card */}
+                                <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-amber-500/10 transition-all"></div>
+                                    <div>
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-[#fab728] rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:-rotate-3">
+                                                <Globe size={28} strokeWidth={1.5} />
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Processing</span>
+                                            </div>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-[#fab728] transition-colors">docs.main-product.com</h3>
+                                        <p className="text-xs text-slate-500 mb-6 font-medium">External changelogs and API documentation crawled automatically every week.</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                                            <div className="flex items-center gap-1.5"><Link size={12} /><span>Depth: 3</span></div>
+                                            <div className="flex items-center gap-1.5 text-[#fab728]"><Loader2 size={12} className="animate-spin" /><span>Processing</span></div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setIsManageSourceOpen(true)}
+                                                className="flex-1 py-3 bg-[#fab728] hover:bg-[#e6a623] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 flex items-center justify-center gap-2"
+                                            >
+                                                Manage <ChevronRight size={14} strokeWidth={3} />
+                                            </button>
+                                            <button className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </MobileCarousel>
+
+                        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {/* PDF Card Desktop */}
+                            <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
                                 <div>
                                     <div className="flex justify-between items-start mb-8">
-                                        <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-[#55b7e0] rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:rotate-3">
+                                        <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-primary-500 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:rotate-3">
                                             <FileText size={28} strokeWidth={1.5} />
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Indexed</span>
                                         </div>
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-[#55b7e0] transition-colors line-clamp-2">Company_Policy_2024.pdf</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">Company_Policy_2024.pdf</h3>
                                     <p className="text-xs text-slate-500 mb-6 font-medium">Internal HR guidelines, safety protocols, and company culture documentation.</p>
                                 </div>
                                 <div className="space-y-4">
@@ -244,7 +344,7 @@ export const KnowledgeBase: React.FC = () => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setIsManageSourceOpen(true)}
-                                            className="flex-1 py-3 bg-[#55b7e0] hover:bg-[#4aa3c8] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 active:scale-95 flex items-center justify-center gap-2"
+                                            className="flex-1 py-3 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center justify-center gap-2"
                                         >
                                             Manage <ChevronRight size={14} strokeWidth={3} />
                                         </button>
@@ -253,8 +353,8 @@ export const KnowledgeBase: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Web Card */}
-                            <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px]">
+                            {/* Web Card Desktop */}
+                            <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-amber-500/10 transition-all"></div>
                                 <div>
                                     <div className="flex justify-between items-start mb-8">
@@ -302,12 +402,67 @@ export const KnowledgeBase: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {/* Mobile Tools Carousel */}
+                        <MobileCarousel>
                             {mockTools.map((tool) => (
-                                <div key={tool.id} className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl transition-all duration-500 group flex flex-col justify-between min-h-[300px]">
+                                <div key={tool.id} className="min-w-[85vw] mr-4 snap-center">
+                                    <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl transition-all duration-500 group flex flex-col justify-between min-h-[300px] h-full">
+                                        <div className="space-y-6">
+                                            <div className="flex justify-between items-start">
+                                                <div className={`size-14 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 ${tool.type === 'api' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-500' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-500'
+                                                    }`}>
+                                                    {tool.type === 'api' ? <Cpu size={28} /> : <Code2 size={28} />}
+                                                </div>
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">{tool.status}</span>
+                                            </div>
+
+                                            <div>
+                                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary-500 transition-colors">{tool.name}</h3>
+                                                <p className="text-[10px] font-bold text-slate-400 underline decoration-slate-200 dark:decoration-slate-800 underline-offset-4 uppercase tracking-[0.1em] mb-4">
+                                                    {tool.type === 'api' ? 'REST API Endpoint' : 'JavaScript Script'}
+                                                </p>
+                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{tool.description}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-5">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Users size={12} className="text-slate-400" />
+                                                    <div className="flex -space-x-2">
+                                                        {tool.agents.map((_, i) => (
+                                                            <div key={i} className="size-5 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-[#161b2e]"></div>
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-slate-400">{tool.agents.length} Agent{tool.agents.length !== 1 && 's'}</span>
+                                                </div>
+                                                <span className="text-[10px] font-medium text-slate-400 lowercase italic">{tool.lastSync}</span>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => navigate(tool.type === 'api' ? `/tools/${tool.id}` : `/tools/script/${tool.id}`)}
+                                                    className="flex-1 py-3 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-primary-500/10 active:scale-95 flex items-center justify-center gap-2"
+                                                >
+                                                    Configure
+                                                </button>
+                                                <button className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700">
+                                                    <Settings size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </MobileCarousel>
+
+                        {/* Desktop Tools Grid */}
+                        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {mockTools.map((tool) => (
+                                <div key={tool.id} className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl transition-all duration-500 group flex flex-col justify-between min-h-[300px] h-full">
                                     <div className="space-y-6">
                                         <div className="flex justify-between items-start">
-                                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 ${tool.type === 'api' ? 'bg-sky-50 dark:bg-sky-900/20 text-[#55b7e0]' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-500'
+                                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 ${tool.type === 'api' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-500' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-500'
                                                 }`}>
                                                 {tool.type === 'api' ? <Cpu size={28} /> : <Code2 size={28} />}
                                             </div>
@@ -315,7 +470,7 @@ export const KnowledgeBase: React.FC = () => {
                                         </div>
 
                                         <div>
-                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-[#55b7e0] transition-colors">{tool.name}</h3>
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary-500 transition-colors">{tool.name}</h3>
                                             <p className="text-[10px] font-bold text-slate-400 underline decoration-slate-200 dark:decoration-slate-800 underline-offset-4 uppercase tracking-[0.1em] mb-4">
                                                 {tool.type === 'api' ? 'REST API Endpoint' : 'JavaScript Script'}
                                             </p>
@@ -340,7 +495,7 @@ export const KnowledgeBase: React.FC = () => {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => navigate(tool.type === 'api' ? `/tools/${tool.id}` : `/tools/script/${tool.id}`)}
-                                                className="flex-1 py-3 bg-[#55b7e0] hover:bg-[#4aa3c8] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-sky-500/10 active:scale-95 flex items-center justify-center gap-2"
+                                                className="flex-1 py-3 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-primary-500/10 active:scale-95 flex items-center justify-center gap-2"
                                             >
                                                 Configure
                                             </button>

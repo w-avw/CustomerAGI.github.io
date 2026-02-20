@@ -1,0 +1,61 @@
+# Making BotNexus AI Studio Responsive
+
+This document outlines the strategy for moving the current BotNexus AI Studio dashboard from a desktop-only layout to a fully responsive, mobile-first design.
+
+## User Review Required
+
+## Strategy Overview
+We will implement a permanent Bottom Navigation Bar for mobile, introduce Framer Motion horizontal swiping for selecting Teams and Agents, add Top Tabs for Configuration/Testing panels, and place chat filters inside a Top Right Hamburger Menu. We will also rebrand everything to CustomerAGI using the new specific color palette.
+
+Here is the breakdown of the Tailwind utility changes needed across the application to handle breakpoints (`sm`, [md](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/README.md), `lg`, `xl`).
+
+### App Navigation (Mobile-First)
+*   **[MODIFY] [App.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/App.tsx) & [components/Sidebar.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/components/Sidebar.tsx)**
+    *   Hide the left Sidebar entirely on mobile screens (`hidden md:flex`).
+    *   Implement a **Bottom Navigation Bar** for mobile devices fixed to the bottom edge containing icons for Dashboard, Agents, Knowledge Base, and Settings.
+
+---
+
+### Global Rebranding
+*   **[MODIFY] Multiple Files ([Sidebar.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/components/Sidebar.tsx), [Settings.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/Settings.tsx), [index.html](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/index.html), etc.)**
+    *   Find and replace all user-facing instances of "BotNexus" or "Innagent" with the final brand name: **CustomerAGI**.
+*   **[MODIFY] [index.css](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/src/index.css) & `tailwind.config.ts`**
+    *   Implement the unified global Color Palette:
+        *   **Primary:** `#3fd4eb` (Cyan/Aqua tone)
+        *   **Secondary:** `#7d7d7d` (Greyscale axis for text, borders, muting)
+        *   **Accent:** `#ffa21f` (Orange/Amber for actions, highlights)
+
+---
+
+### Page Overhauls
+
+#### [MODIFY] [pages/AITeamGallery.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/AITeamGallery.tsx) & [pages/AgentBuilder.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/AgentBuilder.tsx)
+*   **Team Selection:** Reformat the Team Cards on mobile to function as a horizontal scrolling/swiping carousel rather than a wrapping grid.
+*   **Agent Configuration:** Remove the side-by-side split view. The view will scroll vertically containing the settings forms.
+*   **Testing Mode:** Introduce a sticky Top Tab bar inside the page with "Configuration" and "Testing" tabs. Swiping or tapping "Testing" will slide the Chat Preview panel into view, replacing the configuration form on the screen.
+
+#### [MODIFY] [pages/KnowledgeBase.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/KnowledgeBase.tsx)
+*   **Tabs to Horizontal Swipe:** Adjust the Tab navigation (Knowledge Base vs Tools & API) to use horizontal swiping or sticky Top Tabs identical to the `AgentBuilder` testing flow.
+*   **Data Sources:** Reformat the Data Sources grid to be a horizontal scrolling/swiping carousel on mobile (`flex-nowrap overflow-x-auto snap-x`).
+*   Convert the Tools & API Table to be scrollable horizontally.
+
+#### [MODIFY] [pages/ToolConfig.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/ToolConfig.tsx)
+*   Similar to AgentBuilder, shift the flex container to `flex-col` on mobile (`lg:flex-row`).
+*   Ensure the Code Editor and JSON Body inputs have a constrained width on mobile to prevent overflow, allowing internal scrolling.
+
+#### [MODIFY] [pages/ConversationHistory.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/ConversationHistory.tsx)
+*   Implement a standard mobile chat layout.
+*   Hide the 400px Inbox list sidebar completely on mobile inside the Chat View.
+*   Add a Hamburger Menu button to the **Top Right Corner** of the header that opens a drawer containing the inbox list and all the conversational Filters.
+
+#### [MODIFY] [pages/Settings.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/Settings.tsx)
+*   The recently updated Settings page is already mostly single-column, so it naturally reflows well. We will ensure the `p-8` paddings are reduced to `p-4` on mobile to maximize screen real estate.
+*   Ensure the 3D animated credit card component is scaled appropriately on extremely small screens (e.g., `< 380px`).
+
+## Verification Plan
+
+### Automated Tests
+*   We will use the Browser Subagent to open `http://localhost:3003` in various viewport sizes (mobile, tablet, desktop) to capture screenshots of the reflowed interfaces.
+
+### Manual Verification
+*   You will be able to shrink your desktop browser window or use Chrome DevTools Device Toolbar to see the responsive breakpoints snap into place.
