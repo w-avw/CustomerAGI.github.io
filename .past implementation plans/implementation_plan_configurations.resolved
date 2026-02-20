@@ -1,0 +1,34 @@
+# Configurations / Settings Page Implementation
+
+The goal is to fully build out the [Settings.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/Settings.tsx) page to handle workspace configurations, team management, and billing in a unified, **single-scrolling** page layout. 
+
+## Proposed Changes
+
+### [MODIFY] [Settings.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20CustomerAGI%20Proyect/Innagent/pages/Settings.tsx)
+- **Layout Structure:**
+  - Remove the concept of hiding tabs. The page will be a single scrolling view containing sections for General, Workspace, and Billing sequentially. The top navigation tabs will act as anchor links that scroll the user to the respective section.
+  - Remove the "Security & API" tab and its related content completely.
+- **General Settings Section:** 
+  - Retain workspace branding (logo, name) and localization (language, timezone).
+  - Add a **Theme & Colors** configuration area. This will include a Dark / Light mode toggle, and a color palette selector using hex colors (with a default option specifically named "CustomerAGI").
+- **Workspace (Team) Section:**
+  - Build out the Team Management table.
+  - Implement a modal for the "Invite Member" action that includes an email input and a Role/Permission dropdown (e.g., Admin, Editor).
+  - Add "Remove" functionality to the team member rows.
+- **Billing Section:**
+  - Create a completely new UI section containing:
+    - **Current Plan & Limits:** (e.g., "Pro Plan", credit usage progress bar).
+    - **Payment Method:** Implement a fully interactive 3D animated **Credit Card** component (using `framer-motion`) based on the provided reference code.
+    - **Invoice History:** A small table showing past invoices and download links.
+    - **Danger Zone:** A visually distinct (red-bordered/tinted) area at the bottom for destructive actions, specifically "Cancel Plan".
+
+### Dependency Additions
+- `npm install framer-motion clsx tailwind-merge` to support the sophisticated 3D credit card animations and component utility merging as requested.
+
+## Verification Plan
+
+### Manual Verification
+- Navigate to the Settings page.
+- Ensure the page scrolls smoothly and clicking the top tabs navigates to the correct sections.
+- Verify the Security tab is gone.
+- Interact with the new Theme select, Team invite modal, and review the layout of the complex Billing section.

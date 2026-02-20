@@ -1,0 +1,30 @@
+# Conversations Page Redesign
+
+The goal is to transform the [ConversationHistory.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20%20CustomerAGI%20Proyect/Innagent/pages/ConversationHistory.tsx) tab into a functional monitoring and human-takeover environment. We will retain the split-view layout but strip away the AI summary components, add a human chat interface, and emphasize which AI Agent is currently handling each discussion.
+
+## Proposed Changes
+
+### [MODIFY] [ConversationHistory.tsx](file:///c:/Users/Daniel%20Roldan%20CT/Desktop/Innagent%20CustomerAGI%20Proyect/Innagent/pages/ConversationHistory.tsx)
+- **Layout & Cleanup**: 
+  - Retain the left sidebar (conversation list) and right reading pane (chat view).
+  - Completely remove the bottom AI Analytics and Summary panel.
+  - Remove the "Analyze Bulk" and "Analyze Flow" buttons.
+- **Left Sidebar Enhancements**:
+  - Implement visual dropdown or toggle filters for **Date**, **Agent**, and **Tag**.
+  - Update list items to prominently display the AI Agent name handling the conversation to ensure it is *very clear visually*.
+- **Right Chat Header**:
+  - Display only the User's Name (e.g., "User #12940").
+  - Emphasize the active AI Agent prominently (e.g., with an icon and colored badge).
+  - Action buttons: Add an ellipsis `...` menu or clear icons for **Export to CSV**, **Delete**, **Tag**, and **Transfer to AI Agent**.
+  - A prominent toggle button: **"Take Over"** / **"Hand Over to AI"** to pause and resume the AI logic.
+- **Chat Input Area**:
+  - Add a fixed message composition area at the bottom of the right pane where humans can send messages to the user directly when they have "taken over" the chat.
+
+## Verification Plan
+
+### Manual Verification
+- Launch the app locally and navigate to the Conversations tab.
+- Verify the AI summary panel is gone.
+- Check that the list view correctly identifies AI agents.
+- Verify the Take Over / Hand Over logic toggles UI state properly.
+- Verify the chat input box renders nicely at the bottom.
