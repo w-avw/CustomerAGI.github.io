@@ -6,6 +6,7 @@ import { Bot } from 'lucide-react';
 import { AgentEditor } from './pages/AgentEditor';
 import { AITeamGallery } from './pages/AITeamGallery';
 import { Dashboard } from './pages/Dashboard';
+import { DashboardStyle } from './pages/DashboardStyle';
 import { KnowledgeBase } from './pages/KnowledgeBase';
 import { APIConfigurator } from './pages/APIConfigurator';
 import { JSConfigurator } from './pages/JSConfigurator';
@@ -44,6 +45,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard_style" element={<DashboardStyle />} />
           <Route path="/agents" element={<AITeamGallery />} />
           <Route path="/agents/new" element={<AgentEditor />} />
           <Route path="/agents/:id" element={<AgentEditor />} />

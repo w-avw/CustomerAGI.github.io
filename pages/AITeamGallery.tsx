@@ -80,19 +80,19 @@ export const AITeamGallery: React.FC = () => {
     }, []);
 
     const TeamCard: React.FC<{ team: Team, isMobile?: boolean }> = ({ team, isMobile }) => (
-        <div className={`group bg-[#161b2e] rounded-2xl border border-slate-800 p-6 flex flex-col shadow-lg hover:shadow-xl hover:shadow-black/20 transition-all duration-300 ${isMobile ? 'min-w-[85vw] snap-center mr-4' : ''}`}>
+        <div className={`group bg-white dark:bg-[#161b2e] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col shadow-sm dark:shadow-md hover:shadow-lg dark:hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/20 transition-all duration-300 ${isMobile ? 'min-w-[85vw] snap-center mr-4' : ''}`}>
             {/* Card Header */}
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <div className="size-14 rounded-2xl bg-primary-900/30 flex items-center justify-center text-primary-500 shadow-inner border border-primary-900/50">
+                    <div className="size-14 rounded-2xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-500 shadow-inner border border-primary-100 dark:border-primary-900/50">
                         <team.icon size={28} strokeWidth={1.5} />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white">{team.name}</h3>
-                        <p className="text-xs text-slate-400 font-medium">{team.agents.length} Agent{team.agents.length !== 1 && 's'}</p>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{team.name}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{team.agents.length} Agent{team.agents.length !== 1 && 's'}</p>
                     </div>
                 </div>
-                <button className="text-slate-600 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800">
+                <button className="text-slate-400 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                     <MoreHorizontal size={20} />
                 </button>
             </div>
@@ -106,23 +106,23 @@ export const AITeamGallery: React.FC = () => {
                             <button
                                 key={agent.id}
                                 onClick={() => navigate(`/agents/${agent.id}`)}
-                                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-800 group/agent transition-all text-left"
+                                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 group/agent transition-all text-left"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="size-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center group-hover/agent:text-primary-500 transition-colors">
+                                    <div className="size-8 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover/agent:text-primary-600 dark:group-hover/agent:text-primary-500 transition-colors">
                                         <Bot size={16} />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-200 group-hover/agent:text-white transition-colors">{agent.name}</p>
+                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover/agent:text-slate-900 dark:group-hover/agent:text-white transition-colors">{agent.name}</p>
                                         <p className="text-[10px] text-slate-500">{agent.role}</p>
                                     </div>
                                 </div>
-                                <ChevronRight size={14} className="text-slate-600 group-hover/agent:text-slate-400 transition-colors" />
+                                <ChevronRight size={14} className="text-slate-400 dark:text-slate-600 group-hover/agent:text-slate-600 dark:group-hover/agent:text-slate-400 transition-colors" />
                             </button>
                         ))}
                     </div>
                 ) : (
-                    <div className="p-4 rounded-xl border border-dashed border-slate-800 text-center">
+                    <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center">
                         <p className="text-xs text-slate-500 italic">No agents yet</p>
                     </div>
                 )}
@@ -138,7 +138,7 @@ export const AITeamGallery: React.FC = () => {
                     Create Agent
                 </button>
                 <button
-                    className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-sm font-bold rounded-xl border border-slate-700 hover:border-slate-600 transition-all active:scale-95"
+                    className="flex-1 py-3 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95"
                 >
                     Configure Team
                 </button>
