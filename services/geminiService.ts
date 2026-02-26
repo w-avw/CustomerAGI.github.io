@@ -2,10 +2,10 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import { AgentConfig, Message } from "../types";
 
 // Initialize Gemini Client
-const apiKey = process.env.API_KEY || '';
+const apiKey = import.meta.env.VITE_API_KEY || '';
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-export const createAgentChat = (config: AgentConfig): Chat => {
+export const createAgentChat = (config: AgentConfig): Chat | null => {
   const systemInstruction = `
     You are an AI assistant named "${config.name}".
     Role & Instructions: ${config.role}
@@ -15,7 +15,8 @@ export const createAgentChat = (config: AgentConfig): Chat => {
   `;
 
   if (!ai) {
-    throw new Error("Gemini AI is not initialized. Please set GEMINI_API_KEY.");
+    console.warn("Gemini AI is not initialized. Please set VITE_API_KEY.");
+    return null;
   }
 
   return ai.chats.create({
@@ -27,7 +28,11 @@ export const createAgentChat = (config: AgentConfig): Chat => {
   });
 };
 
-export const sendMessageToAgent = async (chat: Chat, message: string): Promise<string> => {
+export const sendMessageToAgent = async (chat: Chat | null, message: string): Promise<string> => {
+  if (!chat) {
+    return "Mock Response (No AI Connected): I understand your inquiry. Please configure standard AI attributes to unlock my full potential.";
+  }
+
   try {
     const result = await chat.sendMessage({ message });
     return result.text || "I didn't get a response.";

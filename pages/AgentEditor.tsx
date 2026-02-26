@@ -30,8 +30,12 @@ export const AgentEditor: React.FC = () => {
 
     // Initialize Chat
     useEffect(() => {
-        const chat = createAgentChat(config);
-        setChatInstance(chat);
+        try {
+            const chat = createAgentChat(config);
+            setChatInstance(chat);
+        } catch (e) {
+            console.error("Error creating chat:", e);
+        }
     }, []); // Run once on mount
 
     const handleRestartChat = () => {
@@ -43,13 +47,22 @@ export const AgentEditor: React.FC = () => {
     const handleSendMessage = async () => {
         if (!inputText.trim()) return;
 
-        // Show "No AI Connected" toast
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
+        if (!chatInstance) {
+            // Show "No AI Connected" toast
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+        }
 
         const userMsg: Message = { id: Date.now().toString(), role: 'user', text: inputText, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
         setInputText('');
+        setIsTyping(true);
+
+        const responseText = await sendMessageToAgent(chatInstance, inputText);
+
+        setIsTyping(false);
+        const botMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: responseText, timestamp: new Date() };
+        setMessages(prev => [...prev, botMsg]);
     };
 
     useEffect(() => {
