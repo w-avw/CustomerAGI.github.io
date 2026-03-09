@@ -133,10 +133,62 @@ export const KnowledgeBase: React.FC = () => {
         if (file) {
             const documentId = crypto.randomUUID();
             setSelectedDocument({ file, documentId, name: file.name });
-            setIsAddSourceOpen(false); // Close modal
+            // Do not upload or close modal immediately; wait for explicit Save and Sync.
+        }
+    };
 
-            // Trigger initial upload to webhook
-            uploadToN8n(file, documentId, "");
+    interface DataSource {
+        id: string;
+        type: 'pdf' | 'web';
+        name: string;
+        description: string;
+        status: string;
+        pages?: number;
+        depth?: number;
+        timeAgo: string;
+    }
+
+    const [dataSources, setDataSources] = useState<DataSource[]>([
+        {
+            id: 'mock-1',
+            type: 'pdf',
+            name: 'Company_Policy_2024.pdf',
+            description: 'Internal HR guidelines, safety protocols, and company culture documentation.',
+            status: 'Indexed',
+            pages: 42,
+            timeAgo: '2d ago'
+        },
+        {
+            id: 'mock-2',
+            type: 'web',
+            name: 'docs.main-product.com',
+            description: 'External changelogs and API documentation crawled automatically every week.',
+            status: 'Processing',
+            depth: 3,
+            timeAgo: 'Processing'
+        }
+    ]);
+
+    const handleConfirmSync = () => {
+        if (selectedDocument) {
+            uploadToN8n(selectedDocument.file, selectedDocument.documentId, "");
+
+            // Add to UI state
+            setDataSources([
+                {
+                    id: selectedDocument.documentId,
+                    type: 'pdf',
+                    name: selectedDocument.name,
+                    description: 'Recently uploaded PDF document.',
+                    status: 'Indexed',
+                    pages: 1,
+                    timeAgo: 'Just now'
+                },
+                ...dataSources
+            ]);
+
+            setIsAddSourceOpen(false); // Close modal only after confirmation
+            setSelectedDocument(null);
         }
     };
 
@@ -316,138 +368,87 @@ export const KnowledgeBase: React.FC = () => {
 
                         {/* Data Sources Grid / Carousel */}
                         <MobileCarousel>
-                            <div className="min-w-[85vw] mr-4 snap-center">
-                                {/* PDF Card */}
-                                <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
-                                    <div>
-                                        <div className="flex justify-between items-start mb-8">
-                                            <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-primary-500 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:rotate-3">
-                                                <FileText size={28} strokeWidth={1.5} />
+                            {dataSources.map((source: DataSource) => (
+                                <div key={source.id} className="min-w-[85vw] mr-4 snap-center">
+                                    <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
+                                        <div className={`absolute top-0 right-0 w-32 h-32 ${source.type === 'pdf' ? 'bg-primary-500/5 group-hover:bg-primary-500/10' : 'bg-amber-500/5 group-hover:bg-amber-500/10'} blur-[60px] rounded-full pointer-events-none transition-all`}></div>
+                                        <div>
+                                            <div className="flex justify-between items-start mb-8">
+                                                <div className={`size-14 bg-slate-50 dark:bg-[#1e253c] ${source.type === 'pdf' ? 'text-primary-500 group-hover:rotate-3' : 'text-[#fab728] group-hover:-rotate-3'} rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110`}>
+                                                    {source.type === 'pdf' ? <FileText size={28} strokeWidth={1.5} /> : <Globe size={28} strokeWidth={1.5} />}
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">{source.status}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Indexed</span>
+                                            <h3 className={`text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight ${source.type === 'pdf' ? 'group-hover:text-primary-500' : 'group-hover:text-[#fab728]'} transition-colors line-clamp-2`}>{source.name}</h3>
+                                            <p className="text-xs text-slate-500 mb-6 font-medium">{source.description}</p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                                                <div className="flex items-center gap-1.5">
+                                                    {source.type === 'pdf' ? <LayoutGrid size={12} /> : <Link size={12} />}
+                                                    <span>{source.type === 'pdf' ? `${source.pages} Pages` : `Depth: ${source.depth}`}</span>
+                                                </div>
+                                                <div className={`flex items-center gap-1.5 ${source.type === 'web' && source.status === 'Processing' ? 'text-[#fab728]' : ''}`}>
+                                                    {source.type === 'web' && source.status === 'Processing' ? <Loader2 size={12} className="animate-spin" /> : <Clock size={12} />}
+                                                    <span>{source.timeAgo}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">{selectedDocument ? selectedDocument.name : "Company_Policy_2024.pdf"}</h3>
-                                        <p className="text-xs text-slate-500 mb-6 font-medium">Internal HR guidelines, safety protocols, and company culture documentation.</p>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                                            <div className="flex items-center gap-1.5"><LayoutGrid size={12} /><span>42 Pages</span></div>
-                                            <div className="flex items-center gap-1.5"><Clock size={12} /><span>2d ago</span></div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setIsManageSourceOpen(true)}
-                                                className="flex-1 py-3 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center justify-center gap-2"
-                                            >
-                                                Manage <ChevronRight size={14} strokeWidth={3} />
-                                            </button>
-                                            <button className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="min-w-[85vw] snap-center">
-                                {/* Web Card */}
-                                <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-amber-500/10 transition-all"></div>
-                                    <div>
-                                        <div className="flex justify-between items-start mb-8">
-                                            <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-[#fab728] rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:-rotate-3">
-                                                <Globe size={28} strokeWidth={1.5} />
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setIsManageSourceOpen(true)}
+                                                    className={`flex-1 py-3 text-white text-xs font-bold rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${source.type === 'pdf' ? 'bg-primary-500 hover:bg-primary-400 shadow-primary-500/20' : 'bg-[#fab728] hover:bg-[#e6a623] shadow-amber-500/20'}`}
+                                                >
+                                                    Manage <ChevronRight size={14} strokeWidth={3} />
+                                                </button>
+                                                <button onClick={() => setDataSources(dataSources.filter((s: DataSource) => s.id !== source.id))} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
                                             </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Processing</span>
-                                            </div>
-                                        </div>
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-[#fab728] transition-colors">docs.main-product.com</h3>
-                                        <p className="text-xs text-slate-500 mb-6 font-medium">External changelogs and API documentation crawled automatically every week.</p>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                                            <div className="flex items-center gap-1.5"><Link size={12} /><span>Depth: 3</span></div>
-                                            <div className="flex items-center gap-1.5 text-[#fab728]"><Loader2 size={12} className="animate-spin" /><span>Processing</span></div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setIsManageSourceOpen(true)}
-                                                className="flex-1 py-3 bg-[#fab728] hover:bg-[#e6a623] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 flex items-center justify-center gap-2"
-                                            >
-                                                Manage <ChevronRight size={14} strokeWidth={3} />
-                                            </button>
-                                            <button className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            ))}
                         </MobileCarousel>
 
                         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {/* PDF Card Desktop */}
-                            <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
-                                <div>
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-primary-500 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:rotate-3">
-                                            <FileText size={28} strokeWidth={1.5} />
+                            {dataSources.map((source: DataSource) => (
+                                <div key={source.id} className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
+                                    <div className={`absolute top-0 right-0 w-32 h-32 ${source.type === 'pdf' ? 'bg-primary-500/5 group-hover:bg-primary-500/10' : 'bg-amber-500/5 group-hover:bg-amber-500/10'} blur-[60px] rounded-full pointer-events-none transition-all`}></div>
+                                    <div>
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div className={`size-14 bg-slate-50 dark:bg-[#1e253c] ${source.type === 'pdf' ? 'text-primary-500 group-hover:rotate-3' : 'text-[#fab728] group-hover:-rotate-3'} rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110`}>
+                                                {source.type === 'pdf' ? <FileText size={28} strokeWidth={1.5} /> : <Globe size={28} strokeWidth={1.5} />}
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">{source.status}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Indexed</span>
+                                        <h3 className={`text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight ${source.type === 'pdf' ? 'group-hover:text-primary-500' : 'group-hover:text-[#fab728]'} transition-colors line-clamp-2`}>{source.name}</h3>
+                                        <p className="text-xs text-slate-500 mb-6 font-medium">{source.description}</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                                            <div className="flex items-center gap-1.5">
+                                                {source.type === 'pdf' ? <LayoutGrid size={12} /> : <Link size={12} />}
+                                                <span>{source.type === 'pdf' ? `${source.pages} Pages` : `Depth: ${source.depth}`}</span>
+                                            </div>
+                                            <div className={`flex items-center gap-1.5 ${source.type === 'web' && source.status === 'Processing' ? 'text-[#fab728]' : ''}`}>
+                                                {source.type === 'web' && source.status === 'Processing' ? <Loader2 size={12} className="animate-spin" /> : <Clock size={12} />}
+                                                <span>{source.timeAgo}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">{selectedDocument ? selectedDocument.name : "Company_Policy_2024.pdf"}</h3>
-                                    <p className="text-xs text-slate-500 mb-6 font-medium">Internal HR guidelines, safety protocols, and company culture documentation.</p>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5"><LayoutGrid size={12} /><span>42 Pages</span></div>
-                                        <div className="flex items-center gap-1.5"><Clock size={12} /><span>2d ago</span></div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setIsManageSourceOpen(true)}
-                                            className="flex-1 py-3 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center justify-center gap-2"
-                                        >
-                                            Manage <ChevronRight size={14} strokeWidth={3} />
-                                        </button>
-                                        <button className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Web Card Desktop */}
-                            <div className="bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 group relative overflow-hidden flex flex-col justify-between min-h-[260px] h-full">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-amber-500/10 transition-all"></div>
-                                <div>
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="size-14 bg-slate-50 dark:bg-[#1e253c] text-[#fab728] rounded-2xl flex items-center justify-center shadow-inner border border-slate-100/50 dark:border-slate-700/50 transform transition-transform group-hover:scale-110 group-hover:-rotate-3">
-                                            <Globe size={28} strokeWidth={1.5} />
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Processing</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setIsManageSourceOpen(true)}
+                                                className={`flex-1 py-3 text-white text-xs font-bold rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${source.type === 'pdf' ? 'bg-primary-500 hover:bg-primary-400 shadow-primary-500/20' : 'bg-[#fab728] hover:bg-[#e6a623] shadow-amber-500/20'}`}
+                                            >
+                                                Manage <ChevronRight size={14} strokeWidth={3} />
+                                            </button>
+                                            <button onClick={() => setDataSources(dataSources.filter((s: DataSource) => s.id !== source.id))} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
                                         </div>
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-[#fab728] transition-colors">docs.main-product.com</h3>
-                                    <p className="text-xs text-slate-500 mb-6 font-medium">External changelogs and API documentation crawled automatically every week.</p>
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5"><Link size={12} /><span>Depth: 3</span></div>
-                                        <div className="flex items-center gap-1.5 text-[#fab728]"><Loader2 size={12} className="animate-spin" /><span>Processing</span></div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setIsManageSourceOpen(true)}
-                                            className="flex-1 py-3 bg-[#fab728] hover:bg-[#e6a623] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 flex items-center justify-center gap-2"
-                                        >
-                                            Manage <ChevronRight size={14} strokeWidth={3} />
-                                        </button>
-                                        <button className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-slate-50 dark:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-700"><Trash2 size={18} /></button>
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </section>
                 ) : (
@@ -608,22 +609,54 @@ export const KnowledgeBase: React.FC = () => {
                             </button>
                         </div>
                         <div className="p-10 bg-[#f8f9fa] dark:bg-[#0a0d18]">
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                                {[
-                                    { icon: FileText, label: "PDF", color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
-                                    { icon: File, label: "Word", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-                                    { icon: FileSpreadsheet, label: "CSV", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-                                    { icon: HelpCircle, label: "FAQ", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20" },
-                                    { icon: Globe, label: "Website", color: "text-[#fab728]", bg: "bg-amber-50 dark:bg-amber-900/20" }
-                                ].map((type, idx) => (
-                                    <button key={idx} className="flex flex-col items-center justify-center gap-4 bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-6 rounded-2xl hover:border-[#55b7e0] hover:shadow-xl transition-all group">
-                                        <div className={`size-14 rounded-2xl flex items-center justify-center ${type.bg} ${type.color} group-hover:scale-110 transition-transform`}>
-                                            <type.icon size={28} strokeWidth={1.5} />
-                                        </div>
-                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{type.label}</span>
-                                    </button>
-                                ))}
-                            </div>
+                            {selectedDocument ? (
+                                <div className="flex flex-col items-center justify-center p-8 space-y-6 text-center animate-in fade-in duration-300">
+                                    <div className="size-20 bg-primary-50 dark:bg-[#1e253c] text-primary-500 rounded-3xl flex items-center justify-center shadow-inner border border-primary-100 dark:border-primary-500/20">
+                                        <FileText size={40} strokeWidth={1.5} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{selectedDocument.name}</h3>
+                                        <p className="text-sm text-slate-500 font-medium">Ready to be indexed into the AI Knowledge Base.</p>
+                                    </div>
+                                    <div className="flex gap-4 w-full max-w-sm mt-4">
+                                        <button
+                                            onClick={() => setSelectedDocument(null)}
+                                            className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold rounded-xl transition-all flex-1"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleConfirmSync}
+                                            disabled={isUploading}
+                                            className="px-6 py-3.5 bg-[#55b7e0] hover:bg-[#4aa3c8] text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 active:scale-95 flex-[2] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isUploading ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
+                                            Save and Sync with AI Agent
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                                    {[
+                                        { icon: FileText, label: "PDF", color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
+                                        { icon: File, label: "Word", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
+                                        { icon: FileSpreadsheet, label: "CSV", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+                                        { icon: HelpCircle, label: "FAQ", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20" },
+                                        { icon: Globe, label: "Website", color: "text-[#fab728]", bg: "bg-amber-50 dark:bg-amber-900/20" }
+                                    ].map((type, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={type.label === 'PDF' ? () => fileInputRef.current?.click() : undefined}
+                                            className="flex flex-col items-center justify-center gap-4 bg-white dark:bg-[#161b2e] border border-slate-200 dark:border-slate-800 p-6 rounded-2xl hover:border-[#55b7e0] hover:shadow-xl transition-all group"
+                                        >
+                                            <div className={`size-14 rounded-2xl flex items-center justify-center ${type.bg} ${type.color} group-hover:scale-110 transition-transform`}>
+                                                <type.icon size={28} strokeWidth={1.5} />
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{type.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
