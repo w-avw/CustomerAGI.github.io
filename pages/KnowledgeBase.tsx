@@ -97,9 +97,64 @@ export const KnowledgeBase: React.FC = () => {
         { id: 2, text: "Updated the contact numbers in this document.", time: "5 hrs ago" }
     ]);
 
+    // N8N File Upload State
+    const [selectedDocument, setSelectedDocument] = useState<{ file: File, documentId: string, name: string } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
+    const uploadToN8n = async (file: File, documentId: string, notas_contexto: string = "") => {
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('tenant_id', '1'); // Replace with robust tenant ID if available
+            formData.append('notas_contexto', notas_contexto);
+            formData.append('document_id', documentId);
+
+            const response = await fetch('https://n8n-n8n.rcnvtl.easypanel.host/webhook-test/subir-pdf-mvp', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                console.error("Failed to upload to N8N");
+            } else {
+                console.log("Uploaded successfully to N8N");
+            }
+        } catch (error) {
+            console.error("Error uploading to N8N:", error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const documentId = crypto.randomUUID();
+            setSelectedDocument({ file, documentId, name: file.name });
+            setIsAddSourceOpen(false); // Close modal
+
+            // Trigger initial upload to webhook
+            uploadToN8n(file, documentId, "");
+        }
+    };
+
     const handleSendNote = () => {
         if (!aiNote.trim()) return;
-        setChatNotes([...chatNotes, { id: Date.now(), text: aiNote, time: "Just now" }]);
+
+        if (selectedDocument) {
+            const confirmSync = window.confirm("Sync Knowledge Base with this note?");
+            if (confirmSync) {
+                setChatNotes([...chatNotes, { id: Date.now(), text: aiNote, time: "Just now" }]);
+                // Trigger secondary upload mapping the file and new notes to the webhook
+                uploadToN8n(selectedDocument.file, selectedDocument.documentId, aiNote);
+            }
+        } else {
+            // Mock fallback if no document is dynamically uploaded
+            setChatNotes([...chatNotes, { id: Date.now(), text: aiNote, time: "Just now" }]);
+        }
+
         setAiNote('');
     };
 
@@ -247,6 +302,15 @@ export const KnowledgeBase: React.FC = () => {
                                 >
                                     <Plus size={18} /> Add Source
                                 </button>
+
+                                {/* Hidden File Input */}
+                                <input
+                                    type="file"
+                                    accept=".pdf"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    onChange={handleFileSelect}
+                                />
                             </div>
                         </div>
 
@@ -265,7 +329,7 @@ export const KnowledgeBase: React.FC = () => {
                                                 <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Indexed</span>
                                             </div>
                                         </div>
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">Company_Policy_2024.pdf</h3>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">{selectedDocument ? selectedDocument.name : "Company_Policy_2024.pdf"}</h3>
                                         <p className="text-xs text-slate-500 mb-6 font-medium">Internal HR guidelines, safety protocols, and company culture documentation.</p>
                                     </div>
                                     <div className="space-y-4">
@@ -333,7 +397,7 @@ export const KnowledgeBase: React.FC = () => {
                                             <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Indexed</span>
                                         </div>
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">Company_Policy_2024.pdf</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary-500 transition-colors line-clamp-2">{selectedDocument ? selectedDocument.name : "Company_Policy_2024.pdf"}</h3>
                                     <p className="text-xs text-slate-500 mb-6 font-medium">Internal HR guidelines, safety protocols, and company culture documentation.</p>
                                 </div>
                                 <div className="space-y-4">
@@ -574,7 +638,7 @@ export const KnowledgeBase: React.FC = () => {
                             <div className="size-24 bg-slate-100 dark:bg-[#161b2e] border border-slate-200 dark:border-slate-700 rounded-3xl flex items-center justify-center text-[#55b7e0] shadow-inner mb-6">
                                 <FileText size={48} strokeWidth={1} />
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 text-center leading-tight">Company_Policy_2024.pdf</h3>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 text-center leading-tight">{selectedDocument ? selectedDocument.name : "Company_Policy_2024.pdf"}</h3>
                             <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 mb-10">Indexed</span>
 
                             <button className="w-full py-3.5 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
