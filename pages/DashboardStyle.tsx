@@ -11,6 +11,9 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend
 } from 'recharts';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Float, Html, MeshDistortMaterial, MeshWobbleMaterial } from '@react-three/drei';
+import * as THREE from 'three';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -119,102 +122,113 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-// Extracted Complex Charts
-const MountainTracker = () => {
-    const layers = 18;
-    const topoLayers = React.useMemo(() => {
-        let paths = [];
-        for (let i = 0; i < layers; i++) {
-            const scale = 1 - (i / layers);
-            const yOffset = 260 - (i * 12);
-            const points = [];
-            const numPoints = 14 + Math.floor(scale * 12);
-            for (let j = 0; j <= numPoints; j++) {
-                const angle = (j / numPoints) * Math.PI * 2;
-                const baseRX = 200 * scale;
-                const baseRY = 80 * scale;
-                const noise = 1 + (Math.sin(angle * 5 + i) * 0.15) + (Math.cos(angle * 3 - i) * 0.1);
-                const px = 250 + (Math.cos(angle) * baseRX * noise);
-                const py = yOffset + (Math.sin(angle) * baseRY * noise);
-                points.push(`${j === 0 ? 'M' : 'L'} ${px} ${py}`);
-            }
-            paths.push({ key: `topo-${i}`, d: points.join(' ') + ' Z', opacity: 0.35 + (i * 0.03) });
-        }
-        return paths;
-    }, []);
+// --- 3D Mountain Components ---
 
-    // Compute pin positions (these stay fixed in 2D overlay)
-    const sortedAgents = React.useMemo(() => [...mountainAgents].sort((a, b) => a.score - b.score), []);
-    const pinPositions = React.useMemo(() => {
-        return sortedAgents.map(agent => {
-            const ratio = agent.score / 100;
-            const sx = 130, sy = 290, ex = 250, ey = 50;
-            const cx = sx + ((ex - sx) * ratio) + (Math.sin(ratio * Math.PI) * 45);
-            const cy = sy - ((sy - ey) * ratio);
-            const pinH = 35 + (agent.score * 0.12);
-            return { ...agent, cx, cy, pinH };
-        });
-    }, []);
+const MountainModel = () => {
+    const meshRef = React.useRef<THREE.Mesh>(null);
+    
+    useFrame((state) => {
+        if (meshRef.current) {
+            meshRef.current.rotation.z += 0.005;
+        }
+    });
 
     return (
-        <div className="w-full h-full relative overflow-hidden rounded-xl" style={{ perspective: '800px' }}>
-            {/* 3D Rotating Mountain Body */}
-            <div className="absolute inset-0 flex items-center justify-center mountain-rotate-container" style={{ transformStyle: 'preserve-3d' }}>
-                <svg className="w-full h-full" viewBox="0 0 500 350" preserveAspectRatio="xMidYMid slice">
-                    <defs>
-                        <linearGradient id="mountainGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#55b7e0" stopOpacity={0.5} />
-                            <stop offset="100%" stopColor="#55b7e0" stopOpacity={0.05} />
-                        </linearGradient>
-                        <filter id="mountainGlow" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="4" result="blur" />
-                            <feMerge>
-                                <feMergeNode in="blur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                    </defs>
+        <group rotation={[-Math.PI / 2.5, 0, 0]}>
+            {/* The Mountain Base/Terrain */}
+            <mesh ref={meshRef}>
+                <coneGeometry args={[4, 5, 64, 32]} />
+                <meshStandardMaterial 
+                    color="#55b7e0" 
+                    wireframe 
+                    transparent 
+                    opacity={0.3}
+                    emissive="#55b7e0"
+                    emissiveIntensity={0.5}
+                />
+            </mesh>
 
-                    {/* Topo Layers */}
-                    {topoLayers.map(layer => (
-                        <path key={layer.key} d={layer.d}
-                            fill={`rgba(20, 30, 50, ${layer.opacity})`}
-                            stroke="rgba(85, 183, 224, 0.15)"
-                            strokeWidth="1.2" />
-                    ))}
+            {/* Topographical Rings */}
+            {[...Array(15)].map((_, i) => (
+                <mesh key={i} position={[0, 0, (i * 0.3) - 2]} rotation={[Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[i * 0.25, i * 0.25 + 0.02, 64]} />
+                    <meshBasicMaterial color="#55b7e0" transparent opacity={0.2} />
+                </mesh>
+            ))}
 
-                    {/* Mountain silhouette fill */}
-                    <path d="M50 290 Q150 260 250 40 Q350 260 450 290 Z"
-                        fill="url(#mountainGrad)" stroke="#55b7e0" strokeWidth="2" filter="url(#mountainGlow)" />
+            {/* Agent Pins in 3D Space */}
+            {mountainAgents.map((agent, index) => {
+                const ratio = agent.score / 100;
+                const angle = (index / mountainAgents.length) * Math.PI * 2;
+                const radius = 3.5 * (1 - ratio);
+                const height = 5 * ratio - 2.5;
+                
+                return (
+                    <group key={agent.name} position={[
+                        Math.cos(angle) * radius,
+                        Math.sin(angle) * radius,
+                        height
+                    ]}>
+                        {/* Pin Stick */}
+                        <mesh position={[0, 0, 0.5]}>
+                            <cylinderGeometry args={[0.02, 0.02, 1, 8]} />
+                            <meshBasicMaterial color={agent.color} />
+                        </mesh>
+                        
+                        {/* Glowing Head */}
+                        <mesh position={[0, 0.5, 0]}>
+                            <sphereGeometry args={[0.15, 16, 16]} />
+                            <meshBasicMaterial color={agent.color} />
+                        </mesh>
 
-                    {/* Route Dashed Line */}
-                    <path d="M120 280 C180 250, 160 200, 220 180 C260 160, 240 120, 248 55"
-                        fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeDasharray="6,4" />
-                </svg>
+                        {/* Fixed Label (Does not rotate with the mountain) */}
+                        <Html distanceFactor={10} position={[0, 0.8, 0]} center>
+                            <div className="flex flex-col items-center pointer-events-none select-none">
+                                <div className="px-2 py-1 rounded-lg bg-slate-900/80 border border-white/10 backdrop-blur-md shadow-xl flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-white whitespace-nowrap">{agent.name}</span>
+                                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-white/10" style={{color: agent.color}}>{agent.score}</span>
+                                </div>
+                                <div className="w-px h-2 bg-gradient-to-b from-white/20 to-transparent" />
+                            </div>
+                        </Html>
+                    </group>
+                );
+            })}
+        </group>
+    );
+};
+
+const MountainTracker = () => {
+    return (
+        <div className="w-full h-full relative bg-slate-950/40 rounded-[2.5rem] border border-white/5 overflow-hidden">
+            <Canvas shadows dpr={[1, 2]}>
+                <PerspectiveCamera makeDefault position={[0, 2, 10]} fov={45} />
+                <ambientLight intensity={0.5} />
+                <pointLight position={[10, 10, 10]} intensity={1.5} color="#55b7e0" />
+                <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+                
+                <React.Suspense fallback={null}>
+                    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+                        <MountainModel />
+                    </Float>
+                    <OrbitControls 
+                        enableZoom={false} 
+                        enablePan={false}
+                        minPolarAngle={Math.PI / 4}
+                        maxPolarAngle={Math.PI / 2}
+                    />
+                </React.Suspense>
+                
+                <fog attach="fog" args={['#0d1017', 5, 20]} />
+            </Canvas>
+
+            {/* Ambient Background UI Elements */}
+            <div className="absolute top-6 left-6 pointer-events-none">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                    <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">3D Real-time Engine Active</span>
+                </div>
             </div>
-
-            {/* 2D Fixed Pin Overlay (does NOT rotate) */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 500 350" preserveAspectRatio="xMidYMid slice">
-                <defs>
-                    <filter id="pinGlow" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
-                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                    </filter>
-                </defs>
-                {pinPositions.map(agent => (
-                    <g key={agent.name} className="pointer-events-auto cursor-pointer">
-                        <line x1={agent.cx} y1={agent.cy} x2={agent.cx} y2={agent.cy - agent.pinH}
-                            stroke={agent.color} strokeWidth="2.5" opacity="0.85" />
-                        <ellipse cx={agent.cx} cy={agent.cy} rx="8" ry="4"
-                            fill="transparent" stroke={agent.color} strokeWidth="1.5" opacity="0.5" />
-                        <circle cx={agent.cx} cy={agent.cy} r="2.5" fill={agent.color} />
-                        <circle cx={agent.cx} cy={agent.cy - agent.pinH} r="16"
-                            fill={agent.color} filter="url(#pinGlow)" />
-                        <text x={agent.cx} y={agent.cy - agent.pinH + 5} fontSize="12" fill="white"
-                            textAnchor="middle" fontWeight="bold">{agent.score}</text>
-                    </g>
-                ))}
-            </svg>
         </div>
     );
 };
