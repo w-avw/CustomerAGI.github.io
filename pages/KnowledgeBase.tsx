@@ -193,26 +193,27 @@ export const KnowledgeBase: React.FC = () => {
         timeAgo: string;
     }
 
-    const [dataSources, setDataSources] = useState<DataSource[]>([
-        {
-            id: 'mock-1',
-            type: 'pdf',
-            name: 'Company_Policy_2024.pdf',
-            description: 'Internal HR guidelines, safety protocols, and company culture documentation.',
-            status: 'Indexed',
-            pages: 42,
-            timeAgo: '2d ago'
-        },
-        {
-            id: 'mock-2',
-            type: 'web',
-            name: 'docs.main-product.com',
-            description: 'External changelogs and API documentation crawled automatically every week.',
-            status: 'Processing',
-            depth: 3,
-            timeAgo: 'Processing'
+    const fetchDocumentsFromN8n = async () => {
+        try {
+            // Solicitamos a N8N la lista de documentos vinculados al tenant_id '1'
+            const response = await fetch('https://n8n-n8n.rcnvtl.easypanel.host/webhook-test/obtener-documentos-seguros?tenant_id=1');
+            if (response.ok) {
+                const data = await response.json();
+                // Si N8N devuelve un array, actualizamos el estado global de la galería
+                if (Array.isArray(data)) {
+                    setDataSources(data);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching documents from N8N:", error);
         }
-    ]);
+    };
+
+    useEffect(() => {
+        fetchDocumentsFromN8n();
+    }, []);
+
+    const [dataSources, setDataSources] = useState<DataSource[]>([]); // Iniciamos vacío para sincronizar con la DB
 
     const handleConfirmSync = () => {
         if (selectedDocument) {

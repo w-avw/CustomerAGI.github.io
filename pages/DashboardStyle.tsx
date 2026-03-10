@@ -124,111 +124,253 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // --- 3D Mountain Components ---
 
-const MountainModel = () => {
-    const meshRef = React.useRef<THREE.Mesh>(null);
-    
-    useFrame((state) => {
-        if (meshRef.current) {
-            meshRef.current.rotation.z += 0.005;
+// Simple pseudo-noise for procedural terrain
+const hash = (n: number) => {
+    const s = Math.sin(n) * 43758.5453123;
+    return s - Math.floor(s);
+};
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const noise2D = (x: number, y: number): number => {
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+    const fx = x - ix;
+    const fy = y - iy;
+    const a = hash(ix + iy * 57.0);
+    const b = hash(ix + 1.0 + iy * 57.0);
+    const c = hash(ix + (iy + 1.0) * 57.0);
+    const d = hash(ix + 1.0 + (iy + 1.0) * 57.0);
+    const ux = fx * fx * (3.0 - 2.0 * fx);
+    const uy = fy * fy * (3.0 - 2.0 * fy);
+    return lerp(lerp(a, b, ux), lerp(c, d, ux), uy);
+};
+const fbm = (x: number, y: number, octaves = 5): number => {
+    let v = 0, a = 0.5, f = 1.0;
+    for (let i = 0; i < octaves; i++) {
+        v += a * noise2D(x * f, y * f);
+        f *= 2.0;
+        a *= 0.5;
+    }
+    return v;
+};
+
+// Build the terrain geometry once
+const buildMountainGeometry = (): THREE.BufferGeometry => {
+    const size = 8;
+    const segments = 128;
+    const geo = new THREE.PlaneGeometry(size, size, segments, segments);
+    const pos = geo.attributes.position;
+    const center = size / 2;
+
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const dist = Math.sqrt(x * x + y * y);
+        const maxR = size * 0.45;
+
+        // Radial falloff — peak at center, zero at edges
+        const radial = Math.max(0, 1.0 - (dist / maxR));
+        const radialShaped = Math.pow(radial, 1.4);
+
+        // Noise for natural irregularity (ridges, valleys)
+        const n = fbm(x * 1.2 + 5.3, y * 1.2 + 2.7, 6);
+
+        // Combine: strong peak + noise perturbation
+        let h = radialShaped * 4.0; // max height ~4
+        h += (n - 0.5) * 1.6 * radialShaped; // noise only affects mountainous area
+        h = Math.max(0, h);
+
+        pos.setZ(i, h);
+    }
+
+    geo.computeVertexNormals();
+    return geo;
+};
+
+// Contour ring at a specific height by slicing the terrain
+const ContourRing = ({ height, radius }: { height: number; radius: number }) => {
+    const points: THREE.Vector3[] = [];
+    const segs = 96;
+    for (let i = 0; i <= segs; i++) {
+        const angle = (i / segs) * Math.PI * 2;
+        const r = radius * (1 + (Math.sin(angle * 3) * 0.08 + Math.cos(angle * 5) * 0.05)); // jagged
+        points.push(new THREE.Vector3(Math.cos(angle) * r, Math.sin(angle) * r, height));
+    }
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+    return (
+        <line geometry={lineGeo}>
+            {/* @ts-ignore */}
+            <lineBasicMaterial color="#a0aec0" transparent opacity={0.35} />
+        </line>
+    );
+};
+
+const MountainTerrain = () => {
+    const groupRef = React.useRef<THREE.Group>(null);
+    const geoRef = React.useRef<THREE.BufferGeometry | null>(null);
+
+    // Build geometry once
+    if (!geoRef.current) {
+        geoRef.current = buildMountainGeometry();
+    }
+
+    // Slow auto-rotation
+    useFrame(() => {
+        if (groupRef.current) {
+            groupRef.current.rotation.z += 0.003;
         }
     });
 
+    // Generate contour rings at various heights
+    const contours = React.useMemo(() => {
+        const rings = [];
+        const numRings = 20;
+        for (let i = 1; i <= numRings; i++) {
+            const h = (i / numRings) * 3.8;
+            // Radius decreases as height increases (peak is narrower)
+            const r = 3.5 * Math.pow(1 - (h / 4.2), 0.7);
+            if (r > 0.15) {
+                rings.push({ height: h, radius: r, key: `contour-${i}` });
+            }
+        }
+        return rings;
+    }, []);
+
     return (
-        <group rotation={[-Math.PI / 2.5, 0, 0]}>
-            {/* The Mountain Base/Terrain */}
-            <mesh ref={meshRef}>
-                <coneGeometry args={[4, 5, 64, 32]} />
-                <meshStandardMaterial 
-                    color="#55b7e0" 
-                    wireframe 
-                    transparent 
-                    opacity={0.3}
-                    emissive="#55b7e0"
-                    emissiveIntensity={0.5}
+        <group ref={groupRef}>
+            {/* The actual terrain mesh */}
+            <mesh geometry={geoRef.current} rotation={[0, 0, 0]}>
+                <meshStandardMaterial
+                    color="#2d3748"
+                    roughness={0.9}
+                    metalness={0.1}
+                    flatShading
                 />
             </mesh>
 
-            {/* Topographical Rings */}
-            {[...Array(15)].map((_, i) => (
-                <mesh key={i} position={[0, 0, (i * 0.3) - 2]} rotation={[Math.PI / 2, 0, 0]}>
-                    <ringGeometry args={[i * 0.25, i * 0.25 + 0.02, 64]} />
-                    <meshBasicMaterial color="#55b7e0" transparent opacity={0.2} />
-                </mesh>
+            {/* Wireframe overlay for topographical texture */}
+            <mesh geometry={geoRef.current}>
+                <meshBasicMaterial
+                    color="#a0aec0"
+                    wireframe
+                    transparent
+                    opacity={0.08}
+                />
+            </mesh>
+
+            {/* Contour rings */}
+            {contours.map(c => (
+                <ContourRing key={c.key} height={c.height} radius={c.radius} />
             ))}
 
-            {/* Agent Pins in 3D Space */}
-            {mountainAgents.map((agent, index) => {
-                const ratio = agent.score / 100;
-                const angle = (index / mountainAgents.length) * Math.PI * 2;
-                const radius = 3.5 * (1 - ratio);
-                const height = 5 * ratio - 2.5;
-                
-                return (
-                    <group key={agent.name} position={[
-                        Math.cos(angle) * radius,
-                        Math.sin(angle) * radius,
-                        height
-                    ]}>
-                        {/* Pin Stick */}
-                        <mesh position={[0, 0, 0.5]}>
-                            <cylinderGeometry args={[0.02, 0.02, 1, 8]} />
-                            <meshBasicMaterial color={agent.color} />
-                        </mesh>
-                        
-                        {/* Glowing Head */}
-                        <mesh position={[0, 0.5, 0]}>
-                            <sphereGeometry args={[0.15, 16, 16]} />
-                            <meshBasicMaterial color={agent.color} />
-                        </mesh>
+            {/* Base ellipse ring */}
+            <mesh position={[0, 0, 0.01]} rotation={[0, 0, 0]}>
+                <ringGeometry args={[3.4, 3.5, 128]} />
+                <meshBasicMaterial color="#55b7e0" transparent opacity={0.5} />
+            </mesh>
 
-                        {/* Fixed Label (Does not rotate with the mountain) */}
-                        <Html distanceFactor={10} position={[0, 0.8, 0]} center>
-                            <div className="flex flex-col items-center pointer-events-none select-none">
-                                <div className="px-2 py-1 rounded-lg bg-slate-900/80 border border-white/10 backdrop-blur-md shadow-xl flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-white whitespace-nowrap">{agent.name}</span>
-                                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-white/10" style={{color: agent.color}}>{agent.score}</span>
-                                </div>
-                                <div className="w-px h-2 bg-gradient-to-b from-white/20 to-transparent" />
-                            </div>
-                        </Html>
-                    </group>
+            {/* Dashed trail (climbing path) */}
+            {(() => {
+                const trailPts: THREE.Vector3[] = [];
+                const steps = 60;
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const angle = t * Math.PI * 3.5; // spiral up
+                    const r = 3.0 * (1 - t * 0.85);
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r;
+                    const h = t * 3.8 + 0.1;
+                    trailPts.push(new THREE.Vector3(x, y, h));
+                }
+                const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPts);
+                return (
+                    <line geometry={trailGeo}>
+                        {/* @ts-ignore */}
+                        <lineDashedMaterial color="white" dashSize={0.15} gapSize={0.1} transparent opacity={0.7} />
+                    </line>
                 );
-            })}
+            })()}
+        </group>
+    );
+};
+
+// Agent pins placed around the mountain
+const AgentPin = ({ agent, index, total }: { agent: typeof mountainAgents[0]; index: number; total: number }) => {
+    const ratio = agent.score / 100;
+    // Place along a spiral path up the mountain
+    const angle = (index / total) * Math.PI * 2.5 + Math.PI * 0.3;
+    const radius = 3.0 * (1 - ratio * 0.85);
+    const height = ratio * 3.8 + 0.1;
+    const stickHeight = 1.2 + ratio * 0.5;
+
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+
+    return (
+        <group position={[x, y, height]}>
+            {/* Pin stick */}
+            <mesh position={[0, 0, stickHeight / 2]}>
+                <cylinderGeometry args={[0.025, 0.025, stickHeight, 8]} />
+                <meshBasicMaterial color={agent.color} />
+            </mesh>
+
+            {/* Pin head sphere */}
+            <mesh position={[0, 0, stickHeight]}>
+                <sphereGeometry args={[0.2, 16, 16]} />
+                <meshBasicMaterial color={agent.color} />
+            </mesh>
+
+            {/* Base anchor dot */}
+            <mesh position={[0, 0, 0.02]}>
+                <circleGeometry args={[0.08, 16]} />
+                <meshBasicMaterial color={agent.color} />
+            </mesh>
+
+            {/* HTML label — stays camera-facing and doesn't rotate */}
+            <Html distanceFactor={12} position={[0, 0, stickHeight + 0.5]} center>
+                <div className="flex flex-col items-center pointer-events-none select-none">
+                    <div className="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-white/10 backdrop-blur-md shadow-2xl flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-white whitespace-nowrap">{agent.name}</span>
+                        <span className="text-[11px] font-black px-1.5 py-0.5 rounded-md" style={{ backgroundColor: agent.color + '30', color: agent.color }}>{agent.score}</span>
+                    </div>
+                </div>
+            </Html>
         </group>
     );
 };
 
 const MountainTracker = () => {
     return (
-        <div className="w-full h-full relative bg-slate-950/40 rounded-[2.5rem] border border-white/5 overflow-hidden">
-            <Canvas shadows dpr={[1, 2]}>
-                <PerspectiveCamera makeDefault position={[0, 2, 10]} fov={45} />
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} intensity={1.5} color="#55b7e0" />
-                <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
-                
+        <div className="w-full h-full relative bg-[#0d1117] rounded-[2rem] border border-white/5 overflow-hidden">
+            <Canvas dpr={[1, 2]} gl={{ antialias: true }}>
+                <PerspectiveCamera makeDefault position={[6, -5, 7]} fov={40} />
+
+                {/* Lighting */}
+                <ambientLight intensity={0.6} />
+                <directionalLight position={[5, 5, 8]} intensity={0.8} color="#e2e8f0" />
+                <pointLight position={[-3, -3, 6]} intensity={0.4} color="#55b7e0" />
+
                 <React.Suspense fallback={null}>
-                    <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-                        <MountainModel />
-                    </Float>
-                    <OrbitControls 
-                        enableZoom={false} 
+                    {/* Mountain terrain (auto-rotates) */}
+                    <MountainTerrain />
+
+                    {/* Agent pins (rotate with the mountain via being children of the scene) */}
+                    {mountainAgents.map((agent, i) => (
+                        <AgentPin key={agent.name} agent={agent} index={i} total={mountainAgents.length} />
+                    ))}
+
+                    {/* User orbit control */}
+                    <OrbitControls
+                        enableZoom={false}
                         enablePan={false}
-                        minPolarAngle={Math.PI / 4}
-                        maxPolarAngle={Math.PI / 2}
+                        minPolarAngle={Math.PI / 6}
+                        maxPolarAngle={Math.PI / 2.2}
+                        autoRotate
+                        autoRotateSpeed={0.6}
                     />
                 </React.Suspense>
-                
-                <fog attach="fog" args={['#0d1017', 5, 20]} />
-            </Canvas>
 
-            {/* Ambient Background UI Elements */}
-            <div className="absolute top-6 left-6 pointer-events-none">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-                    <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">3D Real-time Engine Active</span>
-                </div>
-            </div>
+                <fog attach="fog" args={['#0d1117', 8, 22]} />
+            </Canvas>
         </div>
     );
 };
