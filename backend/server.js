@@ -94,7 +94,7 @@ app.put('/api/documents/notes', async (req, res) => {
         });
 
         if (n8nResponse.ok) {
-            res.status(200).json({ message: 'Notes updated successfully in N8N' });
+            res.status(200).json({ status: 'success', message: 'Notas actualizadas' });
         } else {
             console.error("N8N Webhook rejected notes update:", n8nResponse.status);
             res.status(502).json({ error: 'Failed to update notes in N8N' });
@@ -137,13 +137,12 @@ app.delete('/api/documents/:documentId', async (req, res) => {
 });
 
 // =========================================================================
-// ROUTE D: Fetch Documents with Name Mapping (POST)
+// ROUTE D: Fetch Documents with Name Mapping (GET)
 // =========================================================================
-app.post('/api/documents/fetch', async (req, res) => {
+app.get('/api/documents', async (req, res) => {
     try {
-        const { tenant_id } = req.body;
-        if (!tenant_id) return res.status(400).json({ error: 'Missing tenant_id' });
-
+        const tenant_id = req.query.tenant_id || '1';
+        
         // 1. Ask N8N for vector metadata using GET
         const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook/obtener-documentos-seguros?tenant_id=${tenant_id}`, {
             method: 'GET'
@@ -155,30 +154,22 @@ app.post('/api/documents/fetch', async (req, res) => {
             n8nDocs = JSON.parse(rawText);
         } catch (e) {
             console.error("N8N did not return JSON. Raw response was:", rawText);
-            return res.status(502).json({ error: 'N8N returned invalid JSON or empty response. Check N8N Webhook response settings.' });
+            return res.status(502).json({ error: 'N8N returned invalid JSON or empty response.' });
         }
         
         if (!Array.isArray(n8nDocs) || n8nDocs.length === 0) {
             return res.status(200).json([]); // No documents found
         }
-
-        // 2. Query local mapping
-        const documentIds = n8nDocs.map(d => d.document_id).filter(id => id);
         
-        if (documentIds.length === 0) {
-            // Return N8N docs properly formatted for React even if SQLite is empty
-            const fallbackDocs = n8nDocs.map(doc => ({
-                id: doc.document_id,
-                type: 'pdf',
-                name: 'Unknown Document',
-                description: doc.notas_humanas || 'Recently uploaded PDF document.',
-                status: 'Indexed',
-                timeAgo: 'Just now',
-                notas_humanas: doc.notas_humanas || ''
-            }));
-            return res.status(200).json(fallbackDocs);
+        // Filter out any purely empty objects
+        n8nDocs = n8nDocs.filter(d => d.document_id);
+
+        if (n8nDocs.length === 0) {
+            return res.status(200).json([]); // No valid documents
         }
 
+        // 2. Query local mapping
+        const documentIds = n8nDocs.map(d => d.document_id);
         const placeholders = documentIds.map(() => '?').join(',');
         const query = `SELECT document_id, file_name FROM document_mappings WHERE tenant_id = ? AND document_id IN (${placeholders})`;
 
@@ -186,7 +177,12 @@ app.post('/api/documents/fetch', async (req, res) => {
         db.all(query, [tenant_id, ...documentIds], (err, rows) => {
             if (err) {
                 console.error("Local mapping query error:", err);
-                return res.status(200).json(n8nDocs); // Fallback to raw N8N response without mapping
+                const fallbackDocs = n8nDocs.map(doc => ({
+                    document_id: doc.document_id,
+                    file_name: 'Unknown Document',
+                    notas_humanas: doc.notas_humanas || ''
+                }));
+                return res.status(200).json(fallbackDocs);
             }
 
             // Create a lookup dictionary
@@ -195,14 +191,10 @@ app.post('/api/documents/fetch', async (req, res) => {
                 namesMap[row.document_id] = row.file_name;
             });
 
-            // 3. Merge data
+            // 3. Merge data exactly as requested
             const enrichedDocs = n8nDocs.map(doc => ({
-                id: doc.document_id,
-                type: 'pdf',
-                name: namesMap[doc.document_id] || 'Unknown Document',
-                description: doc.notas_humanas || 'Recently uploaded PDF document.',
-                status: 'Indexed',
-                timeAgo: 'Just now',
+                document_id: doc.document_id,
+                file_name: namesMap[doc.document_id] || 'Unknown Document',
                 notas_humanas: doc.notas_humanas || ''
             }));
 

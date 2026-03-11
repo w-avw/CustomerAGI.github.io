@@ -132,7 +132,7 @@ export const KnowledgeBase: React.FC = () => {
 
     const updateNotesInN8n = async (documentId: string, notes: string[]) => {
         try {
-            const notas_contexto = notes.map(n => `- ${n}`).join('\n');
+            const notas_contexto = notes.join('\n');
             const response = await fetch(`${API_BASE}/notes`, {
                 method: 'PUT',
                 headers: {
@@ -201,7 +201,7 @@ export const KnowledgeBase: React.FC = () => {
             const rawNotes = source.notas_humanas.split('\n');
             const parsedNotes = rawNotes
                 .filter(n => n.trim() !== '')
-                .map((n, idx) => ({ id: Date.now() + idx, text: n.replace('- ', ''), time: 'Previously' }));
+                .map((n, idx) => ({ id: Date.now() + idx, text: n, time: 'Previously' }));
             
             setChatNotes(parsedNotes);
         } else {
@@ -225,17 +225,25 @@ export const KnowledgeBase: React.FC = () => {
     const fetchDocumentsFromN8n = async () => {
         try {
             // Solicitamos a Nuestro Backend NodeJS la lista de documentos vinculados al tenant_id '1'
-            const response = await fetch(`${API_BASE}/fetch`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tenant_id: '1' })
+            const response = await fetch(`${API_BASE}?tenant_id=1`, {
+                method: 'GET'
             });
 
             if (response.ok) {
                 const data = await response.json();
                 // Si el Backend devuelve un array (ya cruzado con SQLite), actualizamos el estado global
                 if (Array.isArray(data)) {
-                    setDataSources(data);
+                    const mappedData: DataSource[] = data.map((doc: any) => ({
+                        id: doc.document_id,
+                        type: 'pdf',
+                        name: doc.file_name,
+                        description: doc.notas_humanas || 'Recently uploaded PDF document.',
+                        status: 'Indexed',
+                        pages: 1,
+                        timeAgo: 'Just now',
+                        notas_humanas: doc.notas_humanas || ''
+                    }));
+                    setDataSources(mappedData);
                 }
             }
         } catch (error) {
