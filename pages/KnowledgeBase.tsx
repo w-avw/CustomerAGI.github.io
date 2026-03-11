@@ -101,28 +101,30 @@ export const KnowledgeBase: React.FC = () => {
     const [selectedDocument, setSelectedDocument] = useState<{ file: File, documentId: string, name: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const API_BASE = 'http://localhost:3001/api/documents';
 
-    const uploadToN8n = async (file: File, documentId: string, notas_contexto: string = "") => {
+    const uploadToN8n = async (file: File, documentId: string, aiNote: string) => {
         setIsUploading(true);
         try {
             const formData = new FormData();
-            formData.append('file', file);
-            formData.append('tenant_id', '1'); // Replace with robust tenant ID if available
-            formData.append('notas_contexto', notas_contexto);
-            formData.append('document_id', documentId);
+            formData.append("file", file);
+            formData.append("tenant_id", "1");
+            formData.append("document_id", documentId);
+            formData.append("file_name", file.name); // Pass original file name to local backend mapping
+            formData.append("notas_contexto", aiNote);
 
-            const response = await fetch('https://n8n-n8n.rcnvtl.easypanel.host/webhook-test/subir-pdf-mvp', {
+            const response = await fetch(`${API_BASE}/upload`, {
                 method: 'POST',
                 body: formData,
             });
 
-            if (!response.ok) {
-                console.error("Failed to upload to N8N");
+            if (response.ok) {
+                console.log("Uploaded successfully to Local Backend -> N8N");
             } else {
-                console.log("Uploaded successfully to N8N");
+                console.error("Failed to upload to Local Backend -> N8N");
             }
         } catch (error) {
-            console.error("Error uploading to N8N:", error);
+            console.error("Error uploading to Local Backend -> N8N:", error);
         } finally {
             setIsUploading(false);
         }
@@ -131,7 +133,7 @@ export const KnowledgeBase: React.FC = () => {
     const updateNotesInN8n = async (documentId: string, notes: string[]) => {
         try {
             const notas_contexto = notes.map(n => `- ${n}`).join('\n');
-            const response = await fetch('https://n8n-n8n.rcnvtl.easypanel.host/webhook-test/actualizar-notas-pdf', {
+            const response = await fetch(`${API_BASE}/notes`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -143,33 +145,30 @@ export const KnowledgeBase: React.FC = () => {
                 }),
             });
             if (!response.ok) {
-                console.error("Failed to update notes in N8N");
+                console.error("Failed to update notes in Local Backend -> N8N");
             }
         } catch (error) {
-            console.error("Error updating notes in N8N:", error);
+            console.error("Error updating notes in Local Backend -> N8N:", error);
         }
     };
 
     const handleDeleteSource = async (documentId: string) => {
         try {
-            const response = await fetch('https://n8n-n8n.rcnvtl.easypanel.host/webhook-test/borrar-pdf-seguro', {
+            const response = await fetch(`${API_BASE}/${documentId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    document_id: documentId,
-                    tenant_id: '1'
-                }),
+                    'Content-Type': 'application/json',
+                    'tenant_id': '1'
+                }
             });
             if (response.ok) {
                 setDataSources(prev => prev.filter(s => s.id !== documentId));
                 setIsManageSourceOpen(false);
             } else {
-                console.error("Failed to delete document in N8N");
+                console.error("Failed to delete document in Local Backend -> N8N");
             }
         } catch (error) {
-            console.error("Error deleting document in N8N:", error);
+            console.error("Error deleting document in Local Backend -> N8N:", error);
         }
     };
 
@@ -195,17 +194,22 @@ export const KnowledgeBase: React.FC = () => {
 
     const fetchDocumentsFromN8n = async () => {
         try {
-            // Solicitamos a N8N la lista de documentos vinculados al tenant_id '1'
-            const response = await fetch('https://n8n-n8n.rcnvtl.easypanel.host/webhook-test/obtener-documentos-seguros?tenant_id=1');
+            // Solicitamos a Nuestro Backend NodeJS la lista de documentos vinculados al tenant_id '1'
+            const response = await fetch(`${API_BASE}/fetch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tenant_id: '1' })
+            });
+
             if (response.ok) {
                 const data = await response.json();
-                // Si N8N devuelve un array, actualizamos el estado global de la galería
+                // Si el Backend devuelve un array (ya cruzado con SQLite), actualizamos el estado global
                 if (Array.isArray(data)) {
                     setDataSources(data);
                 }
             }
         } catch (error) {
-            console.error("Error fetching documents from N8N:", error);
+            console.error("Error fetching documents from Local Backend:", error);
         }
     };
 
