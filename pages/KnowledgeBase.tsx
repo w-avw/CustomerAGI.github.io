@@ -101,7 +101,7 @@ export const KnowledgeBase: React.FC = () => {
     const [selectedDocument, setSelectedDocument] = useState<{ file: File | null, documentId: string, name: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const API_BASE = 'http://localhost:3001/api/documents';
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/documents';
 
     const uploadToN8n = async (file: File, documentId: string, aiNote: string) => {
         setIsUploading(true);
@@ -122,9 +122,11 @@ export const KnowledgeBase: React.FC = () => {
                 console.log("Uploaded successfully to Local Backend -> N8N");
             } else {
                 console.error("Failed to upload to Local Backend -> N8N");
+                alert("Failed to sync document to cloud. Please try again.");
             }
         } catch (error) {
             console.error("Error uploading to Local Backend -> N8N:", error);
+            alert("Backend connection failed. Please check your network.");
         } finally {
             setIsUploading(false);
         }
@@ -146,6 +148,7 @@ export const KnowledgeBase: React.FC = () => {
             });
             if (!response.ok) {
                 console.error("Failed to update notes in Local Backend -> N8N");
+                alert("Failed to sync context note to cloud.");
             } else {
                 // Update local cached state so it persists without reloading
                 setDataSources(prev => prev.map(s => {
@@ -157,6 +160,7 @@ export const KnowledgeBase: React.FC = () => {
             }
         } catch (error) {
             console.error("Error updating notes in Local Backend -> N8N:", error);
+            alert("Backend connection failed. Note was not saved.");
         }
     };
 
@@ -177,9 +181,11 @@ export const KnowledgeBase: React.FC = () => {
                 setIsManageSourceOpen(false);
             } else {
                 console.error("Failed to delete document in Local Backend -> N8N");
+                alert("Failed to delete the document from cloud.");
             }
         } catch (error) {
             console.error("Error deleting document in Local Backend -> N8N:", error);
+            alert("Backend connection failed. Delete operation aborted.");
         }
     };
 
@@ -248,6 +254,7 @@ export const KnowledgeBase: React.FC = () => {
             }
         } catch (error) {
             console.error("Error fetching documents from Local Backend:", error);
+            alert("Backend connection failed. Cannot fetch your Data Sources.");
         }
     };
 
