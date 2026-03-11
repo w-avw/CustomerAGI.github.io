@@ -49,7 +49,7 @@ app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
                 form.append('notas_contexto', notas_contexto || '');
 
                 try {
-                    const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook-test/subir-pdf-mvp`, {
+                    const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook/subir-pdf-mvp`, {
                         method: 'POST',
                         body: form,
                         headers: form.getHeaders() // Automatically sets correct boundary
@@ -87,7 +87,7 @@ app.put('/api/documents/notes', async (req, res) => {
             return res.status(400).json({ error: 'Missing document_id or tenant_id' });
         }
 
-        const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook-test/actualizar-notas-pdf`, {
+        const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook/actualizar-notas-pdf`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ document_id, tenant_id, notas_contexto })
@@ -114,7 +114,7 @@ app.delete('/api/documents/:documentId', async (req, res) => {
         const tenant_id = req.headers['tenant_id'] || req.body.tenant_id || req.query.tenant_id || '1';
 
         // 1. Send DELETE to N8N
-        const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook-test/borrar-pdf-seguro`, {
+        const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook/borrar-pdf-seguro`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ document_id: documentId, tenant_id })
@@ -145,7 +145,7 @@ app.post('/api/documents/fetch', async (req, res) => {
         if (!tenant_id) return res.status(400).json({ error: 'Missing tenant_id' });
 
         // 1. Ask N8N for vector metadata using GET
-        const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook-test/obtener-documentos-seguros?tenant_id=${tenant_id}`, {
+        const n8nResponse = await fetch(`${N8N_BASE_URL}/webhook/obtener-documentos-seguros?tenant_id=${tenant_id}`, {
             method: 'GET'
         });
 
