@@ -153,6 +153,9 @@ export const KnowledgeBase: React.FC = () => {
     };
 
     const handleDeleteSource = async (documentId: string) => {
+        const confirmed = window.confirm("Are you sure you want to delete this document? This action cannot be undone.");
+        if (!confirmed) return;
+        
         try {
             const response = await fetch(`${API_BASE}/${documentId}`, {
                 method: 'DELETE',
@@ -217,7 +220,14 @@ export const KnowledgeBase: React.FC = () => {
         fetchDocumentsFromN8n();
     }, []);
 
-    const [dataSources, setDataSources] = useState<DataSource[]>([]); // Iniciamos vacío para sincronizar con la DB
+    const [dataSources, setDataSources] = useState<DataSource[]>(() => {
+        const cached = sessionStorage.getItem('customeragi_data_sources');
+        return cached ? JSON.parse(cached) : [];
+    });
+
+    useEffect(() => {
+        sessionStorage.setItem('customeragi_data_sources', JSON.stringify(dataSources));
+    }, [dataSources]);
 
     const handleConfirmSync = () => {
         if (selectedDocument) {
